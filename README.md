@@ -26,8 +26,8 @@ Angular + Flutter  →  Spring Boot /api/v1  →  PostgreSQL
 | --- | --- | --- |
 | `SPRING_PROFILES_ACTIVE` | `dev` (H2), `postgres`, `test` | `dev` |
 | `DATABASE_URL` | JDBC PostgreSQL | `jdbc:postgresql://localhost:5432/animalin` |
-| `DATABASE_USER` | Usuario PostgreSQL | `animalin` |
-| `DATABASE_PASSWORD` | Contraseña PostgreSQL | `animalin` |
+| `DATABASE_USER` | Usuario PostgreSQL | `postgres` |
+| `DATABASE_PASSWORD` | Contraseña PostgreSQL | `postgres` |
 | `ANIMALIN_JWT_SECRET` | Secreto JWT (≥ 256 bits) | solo desarrollo |
 | `API_URL` | Base URL Flutter (`--dart-define`) | `http://localhost:8080/api/v1` |
 
