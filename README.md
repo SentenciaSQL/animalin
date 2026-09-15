@@ -65,7 +65,7 @@ Contraseña común: **`Admin123!`**
 | `tina.r@example.net` | TENANT_ADMIN | san-martin |
 | `emma.t@example.net` | VETERINARIAN | san-martin |
 | `nathan.k@example.net` | RECEPTIONIST | san-martin |
-| `emma.t@example.net` | PET_OWNER | san-martin (Luna) |
+| `juan.owner@animalin.app` | PET_OWNER | san-martin (Luna) |
 | `rachel.c@example.org` | TENANT_ADMIN | huellitas |
 | `walt.e@example.net` | PET_OWNER | huellitas |
 | `xavier.y@example.org` | PET_OWNER | ambas clínicas |
