@@ -96,6 +96,19 @@ class TenantIsolationTest {
     }
 
     @Test
+    void listPetsWithoutQueryUsesPostgresCompatibleSql() throws Exception {
+        String token = login(emailA);
+        mockMvc.perform(get("/api/v1/pets")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalElements").value(0));
+        mockMvc.perform(get("/api/v1/owners")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalElements").value(0));
+    }
+
+    @Test
     void loginReturnsAccessToken() throws Exception {
         mockMvc.perform(post("/api/v1/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
