@@ -19,14 +19,14 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
               and a.startAt < :to
               and (:vetId is null or a.veterinarian.id = :vetId)
               and (:branchId is null or a.branchId = :branchId)
-              and (:status is null or a.status = :status)
+              and (:status is null or a.status = cast(:status as string))
             order by a.startAt
             """)
     List<Appointment> calendar(Long tenantId, Instant from, Instant to, Long vetId, Long branchId, String status);
     @Query("""
             select a from Appointment a
             where a.tenantId = :tenantId
-              and (:status is null or a.status = :status)
+              and (:status is null or a.status = cast(:status as string))
               and (:vetId is null or a.veterinarian.id = :vetId)
             """)
     Page<Appointment> search(Long tenantId, String status, Long vetId, Pageable pageable);

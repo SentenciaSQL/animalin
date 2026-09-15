@@ -16,12 +16,12 @@ public interface PetRepository extends JpaRepository<Pet, Long> {
             select p from Pet p
             join p.owner o
             where p.tenantId = :tenantId
-              and (:q is null or lower(p.name) like lower(concat('%', :q, '%'))
-                   or lower(p.microchip) like lower(concat('%', :q, '%'))
-                   or lower(o.firstName) like lower(concat('%', :q, '%'))
-                   or lower(o.lastName) like lower(concat('%', :q, '%')))
-              and (:species is null or p.species = :species)
-              and (:status is null or p.status = :status)
+              and (:q is null or lower(p.name) like lower(concat('%', cast(:q as string), '%'))
+                   or lower(p.microchip) like lower(concat('%', cast(:q as string), '%'))
+                   or lower(o.firstName) like lower(concat('%', cast(:q as string), '%'))
+                   or lower(o.lastName) like lower(concat('%', cast(:q as string), '%')))
+              and (:species is null or p.species = cast(:species as string))
+              and (:status is null or p.status = cast(:status as string))
             """)
     Page<Pet> search(Long tenantId, String q, String species, String status, Pageable pageable);
     long countByTenantId(Long tenantId);

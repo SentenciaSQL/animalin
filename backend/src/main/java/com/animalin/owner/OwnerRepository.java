@@ -14,12 +14,12 @@ public interface OwnerRepository extends JpaRepository<Owner, Long> {
     @Query("""
             select o from Owner o
             where o.tenantId = :tenantId
-              and (:q is null or lower(o.firstName) like lower(concat('%', :q, '%'))
-                   or lower(o.lastName) like lower(concat('%', :q, '%'))
-                   or lower(o.email) like lower(concat('%', :q, '%'))
-                   or lower(o.phone) like lower(concat('%', :q, '%'))
-                   or lower(o.documentId) like lower(concat('%', :q, '%')))
-              and (:status is null or o.status = :status)
+              and (:q is null or lower(o.firstName) like lower(concat('%', cast(:q as string), '%'))
+                   or lower(o.lastName) like lower(concat('%', cast(:q as string), '%'))
+                   or lower(o.email) like lower(concat('%', cast(:q as string), '%'))
+                   or lower(o.phone) like lower(concat('%', cast(:q as string), '%'))
+                   or lower(o.documentId) like lower(concat('%', cast(:q as string), '%')))
+              and (:status is null or o.status = cast(:status as string))
             """)
     Page<Owner> search(Long tenantId, String q, String status, Pageable pageable);
     long countByTenantId(Long tenantId);

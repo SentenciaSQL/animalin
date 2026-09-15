@@ -2,7 +2,7 @@
 
 Plataforma SaaS multi-tenant para clínicas veterinarias y propietarios de mascotas.
 
-- **Backend:** Java 21, Spring Boot 3.5, Spring Security, JWT + refresh tokens, JPA/Hibernate, Flyway, PostgreSQL (H2 en desarrollo), OpenAPI.
+- **Backend:** Java 21, Spring Boot 3.5, Spring Security, JWT + refresh tokens, JPA/Hibernate, Flyway, PostgreSQL, OpenAPI.
 - **Web:** Angular 19, Tailwind CSS, ngx-translate (español por defecto / inglés).
 - **Móvil:** Flutter para propietarios, misma API REST.
 - **Multi-tenant:** base de datos compartida, esquema compartido, `tenant_id`. El tenant se resuelve desde el JWT, nunca desde un identificador enviado por el cliente.
@@ -18,20 +18,27 @@ Angular + Flutter  →  Spring Boot /api/v1  →  PostgreSQL
 - JDK 21 y Maven Wrapper (`backend/mvnw`)
 - Node.js 22 (frontend)
 - Flutter 3.24+ (app móvil)
+- PostgreSQL 16 (local o con Docker)
 - Docker (opcional, para PostgreSQL o el stack completo)
 
 ## Variables de entorno
 
 | Variable | Descripción | Valor de desarrollo |
 | --- | --- | --- |
-| `SPRING_PROFILES_ACTIVE` | `dev` (H2), `postgres`, `test` | `dev` |
+| `SPRING_PROFILES_ACTIVE` | `dev`, `postgres`, `test` | `dev` |
 | `DATABASE_URL` | JDBC PostgreSQL | `jdbc:postgresql://localhost:5432/animalin` |
 | `DATABASE_USER` | Usuario PostgreSQL | `postgres` |
 | `DATABASE_PASSWORD` | Contraseña PostgreSQL | `postgres` |
 | `ANIMALIN_JWT_SECRET` | Secreto JWT (≥ 256 bits) | solo desarrollo |
 | `API_URL` | Base URL Flutter (`--dart-define`) | `http://localhost:8080/api/v1` |
 
-En desarrollo el perfil `dev` usa H2 en `backend/data/animalin` (modo PostgreSQL). No hace falta PostgreSQL para arrancar el API en local.
+El API usa **PostgreSQL** en todos los perfiles (incluido `dev` y `test`). Arranque local típico:
+
+```bash
+docker compose up -d postgres
+```
+
+La base por defecto es `animalin` con usuario y contraseña `postgres`.
 
 ## Multi-tenancy y seguridad
 
@@ -58,7 +65,7 @@ Contraseña común: **`Admin123!`**
 | `tina.r@example.net` | TENANT_ADMIN | san-martin |
 | `emma.t@example.net` | VETERINARIAN | san-martin |
 | `nathan.k@example.net` | RECEPTIONIST | san-martin |
-| `emma.t@example.net` | PET_OWNER | san-martin (Luna) |
+| `juan.owner@animalin.app` | PET_OWNER | san-martin (Luna) |
 | `rachel.c@example.org` | TENANT_ADMIN | huellitas |
 | `walt.e@example.net` | PET_OWNER | huellitas |
 | `xavier.y@example.org` | PET_OWNER | ambas clínicas |
@@ -70,9 +77,10 @@ OpenAPI: `http://localhost:8080/swagger-ui.html`
 ## Backend
 
 ```bash
+docker compose up -d postgres
 cd backend
 ./mvnw spring-boot:run
-# pruebas (incluye aislamiento multi-tenant)
+# pruebas (incluye aislamiento multi-tenant; requieren PostgreSQL)
 ./mvnw test
 ```
 
@@ -103,6 +111,9 @@ En iOS simulador use `http://localhost:8080/api/v1`. FCM queda preparado en `lib
 ## Docker
 
 ```bash
+# Solo PostgreSQL (desarrollo local del API / tests)
+docker compose up -d postgres
+
 # API + PostgreSQL + panel web
 docker compose up --build
 ```
