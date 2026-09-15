@@ -2,6 +2,7 @@ package com.animalin.storage;
 
 import com.animalin.document.ClinicalDocument;
 import com.animalin.document.ClinicalDocumentRepository;
+import com.animalin.dto.AppDtos;
 import com.animalin.pet.Pet;
 import com.animalin.security.AccessGuard;
 import com.animalin.security.TenantContext;
@@ -46,9 +47,19 @@ public class FileController {
     }
 
     @GetMapping("/pets/{petId}/documents")
-    public List<ClinicalDocument> documents(@PathVariable Long petId) {
+    @Transactional(readOnly = true)
+    public List<AppDtos.DocumentResponse> documents(@PathVariable Long petId) {
         Pet pet = accessGuard.requirePet(petId);
-        return documentRepository.findByPetIdAndTenantIdOrderByCreatedAtDesc(pet.getId(), pet.getTenantId());
+        return documentRepository.findByPetIdAndTenantIdOrderByCreatedAtDesc(pet.getId(), pet.getTenantId()).stream()
+                .map(d -> new AppDtos.DocumentResponse(
+                        d.getId(),
+                        d.getTitle(),
+                        d.getCategory(),
+                        d.getCreatedAt(),
+                        d.getFile() == null ? null : d.getFile().getId(),
+                        d.getFile() == null ? null : storageService.publicUrl(d.getFile())
+                ))
+                .toList();
     }
 
     @PostMapping("/pets/{petId}/documents")

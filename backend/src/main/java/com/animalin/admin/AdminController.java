@@ -1,9 +1,6 @@
 package com.animalin.admin;
 
 import com.animalin.plan.Plan;
-import com.animalin.plan.PlanRepository;
-import com.animalin.tenant.Subscription;
-import com.animalin.tenant.SubscriptionRepository;
 import com.animalin.tenant.Tenant;
 import com.animalin.user.User;
 import com.animalin.user.UserRepository;
@@ -25,14 +22,10 @@ import java.util.Map;
 public class AdminController {
 
     private final AdminService adminService;
-    private final PlanRepository planRepository;
-    private final SubscriptionRepository subscriptionRepository;
     private final UserRepository userRepository;
 
-    public AdminController(AdminService adminService, PlanRepository planRepository, SubscriptionRepository subscriptionRepository, UserRepository userRepository) {
+    public AdminController(AdminService adminService, UserRepository userRepository) {
         this.adminService = adminService;
-        this.planRepository = planRepository;
-        this.subscriptionRepository = subscriptionRepository;
         this.userRepository = userRepository;
     }
 
@@ -63,8 +56,8 @@ public class AdminController {
     }
 
     @GetMapping("/subscriptions")
-    public List<Subscription> subscriptions() {
-        return subscriptionRepository.findAll();
+    public List<Map<String, Object>> subscriptions() {
+        return adminService.subscriptions();
     }
 
     @GetMapping("/users")

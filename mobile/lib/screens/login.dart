@@ -16,6 +16,8 @@ class _LoginScreenState extends State<LoginScreen> {
   bool loading = false;
   String? error;
   bool register = false;
+  bool forgot = false;
+  bool sent = false;
   final firstName = TextEditingController();
   final lastName = TextEditingController();
 
@@ -27,7 +29,10 @@ class _LoginScreenState extends State<LoginScreen> {
       error = null;
     });
     try {
-      if (register) {
+      if (forgot) {
+        await widget.auth.forgot(email.text.trim());
+        setState(() => sent = true);
+      } else if (register) {
         await widget.auth.register({
           'firstName': firstName.text,
           'lastName': lastName.text,
@@ -62,22 +67,37 @@ class _LoginScreenState extends State<LoginScreen> {
             Text(i.t('appName'), style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w700)),
             Text(i.t('tagline'), style: Theme.of(context).textTheme.bodyMedium),
             const SizedBox(height: 32),
-            if (register) ...[
+            if (register && !forgot) ...[
               TextField(controller: firstName, decoration: InputDecoration(labelText: i.t('firstName'))),
               const SizedBox(height: 12),
               TextField(controller: lastName, decoration: InputDecoration(labelText: i.t('lastName'))),
               const SizedBox(height: 12),
             ],
             TextField(controller: email, keyboardType: TextInputType.emailAddress, decoration: InputDecoration(labelText: i.t('email'))),
-            const SizedBox(height: 12),
-            TextField(controller: password, obscureText: true, decoration: InputDecoration(labelText: i.t('password'))),
+            if (!forgot) ...[
+              const SizedBox(height: 12),
+              TextField(controller: password, obscureText: true, decoration: InputDecoration(labelText: i.t('password'))),
+            ],
             if (error != null) Padding(padding: const EdgeInsets.only(top: 12), child: Text(error!, style: const TextStyle(color: Colors.red))),
+            if (sent) Padding(padding: const EdgeInsets.only(top: 12), child: Text(i.t('forgotSent'))),
             const SizedBox(height: 20),
-            FilledButton(onPressed: loading ? null : submit, child: Text(register ? i.t('register') : i.t('login'))),
-            TextButton(
-              onPressed: () => setState(() => register = !register),
-              child: Text(register ? i.t('login') : i.t('register')),
+            FilledButton(
+              onPressed: loading ? null : submit,
+              child: Text(forgot ? i.t('forgot') : (register ? i.t('register') : i.t('login'))),
             ),
+            TextButton(
+              onPressed: () => setState(() {
+                forgot = !forgot;
+                register = false;
+                sent = false;
+              }),
+              child: Text(forgot ? i.t('login') : i.t('forgot')),
+            ),
+            if (!forgot)
+              TextButton(
+                onPressed: () => setState(() => register = !register),
+                child: Text(register ? i.t('login') : i.t('register')),
+              ),
           ],
         ),
       ),

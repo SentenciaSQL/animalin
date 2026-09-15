@@ -109,9 +109,28 @@ public class PetService {
     }
 
     @Transactional(readOnly = true)
-    public List<PetWeightLog> weights(Long petId) {
+    public List<AppDtos.WeightResponse> weights(Long petId) {
         accessGuard.requirePet(petId);
-        return weightLogRepository.findByPetIdOrderByRecordedAtAsc(petId);
+        return weightLogRepository.findByPetIdOrderByRecordedAtAsc(petId).stream()
+                .map(w -> new AppDtos.WeightResponse(w.getId(), w.getPetId(), w.getRecordedAt(), w.getWeightKg(), w.getNotes()))
+                .toList();
+    }
+
+    @Transactional
+    public AppDtos.WeightResponse addWeight(Long petId, AppDtos.WeightRequest request) {
+        accessGuard.requirePermission("PET_UPDATE");
+        Pet pet = accessGuard.requirePet(petId);
+        if (request == null || request.weightKg() == null) {
+            throw ApiException.badRequest("El peso es obligatorio");
+        }
+        PetWeightLog log = new PetWeightLog();
+        log.setTenantId(pet.getTenantId());
+        log.setPetId(pet.getId());
+        log.setWeightKg(request.weightKg());
+        log.setNotes(request.notes());
+        weightLogRepository.save(log);
+        pet.setWeightKg(request.weightKg());
+        return new AppDtos.WeightResponse(log.getId(), log.getPetId(), log.getRecordedAt(), log.getWeightKg(), log.getNotes());
     }
 
     private void apply(Pet pet, AppDtos.PetRequest request, Long tenantId) {

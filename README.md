@@ -108,6 +108,8 @@ flutter run --dart-define=API_URL=http://10.0.2.2:8080/api/v1
 
 En iOS simulador use `http://localhost:8080/api/v1`. FCM queda preparado en `lib/core/push.dart` (registrar token en `POST /api/v1/notifications/push-token`).
 
+La app de propietarios consume `GET /api/v1/dashboard` (próxima cita, vacuna y tratamientos), el catálogo por veterinaria (`/branches|services|veterinarians/tenant/{id}`) y el branding embebido en mascotas y citas (`tenantName`, `tenantLogoUrl`).
+
 ## Docker
 
 ```bash

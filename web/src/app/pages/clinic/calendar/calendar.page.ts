@@ -1,6 +1,7 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
 import { ApiService } from '../../../core/services/api.service';
 import { ToastService } from '../../../core/services/toast.service';
@@ -10,18 +11,27 @@ import { EmptyStateComponent } from '../../../shared/ui/empty-state.component';
 
 @Component({
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, TranslatePipe, StatusBadgePipe, EmptyStateComponent],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink, TranslatePipe, StatusBadgePipe, EmptyStateComponent],
   template: `
-    <div class="flex items-center justify-between">
+    <div class="flex flex-wrap items-center justify-between gap-3">
       <div>
         <h1 class="font-display text-2xl font-semibold">{{ 'calendar.title' | translate }}</h1>
         <p class="mt-1 text-sm text-slate-500">{{ 'calendar.subtitle' | translate }}</p>
       </div>
-      <button class="btn-primary" (click)="open=true">{{ 'calendar.new' | translate }}</button>
+      <div class="flex flex-wrap gap-2">
+        <button class="btn-secondary" (click)="shift(-1)">‹</button>
+        <button class="btn-secondary" (click)="goToday()">{{ 'common.today' | translate }}</button>
+        <button class="btn-secondary" (click)="shift(1)">›</button>
+        <button class="btn-secondary" [class.bg-brand-50]="view()==='day'" (click)="view.set('day')">{{ 'common.day' | translate }}</button>
+        <button class="btn-secondary" [class.bg-brand-50]="view()==='week'" (click)="view.set('week')">{{ 'common.week' | translate }}</button>
+        <button class="btn-secondary" [class.bg-brand-50]="view()==='month'" (click)="view.set('month')">{{ 'common.month' | translate }}</button>
+        <button class="btn-primary" (click)="open=true">{{ 'calendar.new' | translate }}</button>
+      </div>
     </div>
-    <div class="mt-6 space-y-2">
-      @if (items().length === 0) { <empty-state [title]="'calendar.empty' | translate" /> }
-      @for (a of items(); track a.id) {
+    <p class="mt-3 text-sm font-medium text-slate-500">{{ rangeLabel() }}</p>
+    <div class="mt-4 space-y-2">
+      @if (visible().length === 0) { <empty-state [title]="'calendar.empty' | translate" /> }
+      @for (a of visible(); track a.id) {
         <div class="card flex flex-wrap items-center justify-between gap-3">
           <div>
             <p class="font-semibold">{{ a.petName }} · {{ a.ownerName }}</p>
@@ -34,12 +44,18 @@ import { EmptyStateComponent } from '../../../shared/ui/empty-state.component';
             }
             @if (a.status === 'CONFIRMED') {
               <button class="btn-secondary text-xs" (click)="status(a.id,'ARRIVED')">{{ 'calendar.arrived' | translate }}</button>
+              <button class="btn-secondary text-xs" (click)="status(a.id,'WAITING')">{{ 'calendar.waiting' | translate }}</button>
             }
             @if (a.status === 'ARRIVED' || a.status === 'WAITING') {
               <button class="btn-primary text-xs" (click)="status(a.id,'IN_PROGRESS')">{{ 'calendar.start' | translate }}</button>
+              <a class="btn-secondary text-xs" [routerLink]="['/consultations/new']" [queryParams]="{ petId: a.petId, appointmentId: a.id }">{{ 'consultations.new' | translate }}</a>
             }
             @if (a.status === 'IN_PROGRESS') {
               <button class="btn-primary text-xs" (click)="status(a.id,'COMPLETED')">{{ 'calendar.complete' | translate }}</button>
+            }
+            @if (a.status !== 'COMPLETED' && a.status !== 'CANCELLED' && a.status !== 'NO_SHOW') {
+              <button class="btn-secondary text-xs" (click)="status(a.id,'CANCELLED')">{{ 'common.cancel' | translate }}</button>
+              <button class="btn-secondary text-xs" (click)="status(a.id,'NO_SHOW')">{{ 'calendar.noShow' | translate }}</button>
             }
           </div>
         </div>
@@ -78,6 +94,8 @@ export class CalendarPage implements OnInit {
   vets = signal<any[]>([]);
   services = signal<any[]>([]);
   open = false;
+  view = signal<'day' | 'week' | 'month'>('week');
+  anchor = signal(new Date());
   form = this.fb.group({
     petId: ['', Validators.required],
     veterinarianId: ['', Validators.required],
@@ -86,17 +104,76 @@ export class CalendarPage implements OnInit {
     reason: ['']
   });
 
+  visible = computed(() => {
+    const from = this.rangeStart().getTime();
+    const to = this.rangeEnd().getTime();
+    return this.items().filter(a => {
+      const t = new Date(a.startAt).getTime();
+      return t >= from && t < to;
+    });
+  });
+
+  rangeLabel = computed(() => {
+    const from = this.rangeStart();
+    const to = new Date(this.rangeEnd().getTime() - 1);
+    return `${from.toLocaleDateString()} – ${to.toLocaleDateString()}`;
+  });
+
   ngOnInit() {
-    const from = new Date(); from.setDate(from.getDate() - 1);
-    const to = new Date(); to.setDate(to.getDate() + 14);
-    this.api.get<Appointment[]>('/appointments', { from: from.toISOString(), to: to.toISOString() }).subscribe(r => this.items.set(r));
+    this.reload();
     this.api.get<PageResponse<Pet>>('/pets', { size: 100 }).subscribe(r => this.pets.set(r.content || []));
     this.api.get<any[]>('/veterinarians').subscribe(r => this.vets.set(r));
     this.api.get<any[]>('/services').subscribe(r => this.services.set(r));
   }
 
+  rangeStart() {
+    const d = new Date(this.anchor());
+    d.setHours(0, 0, 0, 0);
+    if (this.view() === 'week') {
+      const day = d.getDay() || 7;
+      d.setDate(d.getDate() - day + 1);
+    }
+    if (this.view() === 'month') {
+      d.setDate(1);
+    }
+    return d;
+  }
+
+  rangeEnd() {
+    const d = this.rangeStart();
+    if (this.view() === 'month') {
+      d.setMonth(d.getMonth() + 1);
+    } else {
+      d.setDate(d.getDate() + (this.view() === 'week' ? 7 : 1));
+    }
+    return d;
+  }
+
+  shift(delta: number) {
+    const d = new Date(this.anchor());
+    d.setDate(d.getDate() + delta * (this.view() === 'month' ? 30 : this.view() === 'week' ? 7 : 1));
+    this.anchor.set(d);
+    this.reload();
+  }
+
+  goToday() {
+    this.anchor.set(new Date());
+    this.reload();
+  }
+
+  reload() {
+    const from = new Date(this.rangeStart());
+    from.setDate(from.getDate() - 1);
+    const to = new Date(this.rangeEnd());
+    to.setDate(to.getDate() + 1);
+    this.api.get<Appointment[]>('/appointments', { from: from.toISOString(), to: to.toISOString() }).subscribe(r => this.items.set(r));
+  }
+
   status(id: number, status: string) {
-    this.api.post(`/appointments/${id}/status`, { status }).subscribe(() => this.ngOnInit());
+    this.api.post(`/appointments/${id}/status`, { status }).subscribe({
+      next: () => this.reload(),
+      error: (e) => this.toast.show(e.error?.message || 'common.error', true)
+    });
   }
 
   save() {
@@ -108,7 +185,7 @@ export class CalendarPage implements OnInit {
       startAt: new Date(v.startAt!).toISOString(),
       reason: v.reason
     }).subscribe({
-      next: () => { this.toast.show('common.saved'); this.open = false; this.ngOnInit(); },
+      next: () => { this.toast.show('common.saved'); this.open = false; this.reload(); },
       error: (e) => this.toast.show(e.error?.message || 'common.error', true)
     });
   }

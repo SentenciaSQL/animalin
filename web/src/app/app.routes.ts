@@ -23,6 +23,11 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/auth/forgot.page').then(m => m.ForgotPage)
   },
   {
+    path: 'reset-password',
+    canActivate: [guestGuard],
+    loadComponent: () => import('./pages/auth/reset.page').then(m => m.ResetPage)
+  },
+  {
     path: '',
     canActivate: [authGuard],
     loadComponent: () => import('./layout/shell.component').then(m => m.ShellComponent),
@@ -42,7 +47,9 @@ export const routes: Routes = [
       { path: 'services', canActivate: [staffGuard], loadComponent: () => import('./pages/clinic/services/services.page').then(m => m.ServicesPage) },
       { path: 'profile', loadComponent: () => import('./pages/clinic/profile/profile.page').then(m => m.ProfilePage) },
       { path: 'admin', canActivate: [superAdminGuard], loadComponent: () => import('./pages/admin/admin-dashboard.page').then(m => m.AdminDashboardPage) },
-      { path: 'admin/tenants', canActivate: [superAdminGuard], loadComponent: () => import('./pages/admin/tenants.page').then(m => m.AdminTenantsPage) }
+      { path: 'admin/tenants', canActivate: [superAdminGuard], loadComponent: () => import('./pages/admin/tenants.page').then(m => m.AdminTenantsPage) },
+      { path: 'admin/plans', canActivate: [superAdminGuard], loadComponent: () => import('./pages/admin/plans.page').then(m => m.AdminPlansPage) },
+      { path: 'admin/subscriptions', canActivate: [superAdminGuard], loadComponent: () => import('./pages/admin/subscriptions.page').then(m => m.AdminSubscriptionsPage) }
     ]
   },
   { path: '**', redirectTo: 'login' }

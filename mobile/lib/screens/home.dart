@@ -12,8 +12,8 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  Map<String, dynamic> home = {};
   List pets = [];
-  List appointments = [];
   bool loading = true;
 
   @override
@@ -24,11 +24,11 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _load() async {
     try {
-      final p = await widget.auth.api.get('/pets/mine');
-      final a = await widget.auth.api.get('/appointments/mine');
+      final dash = await widget.auth.api.get('/dashboard');
+      final mine = await widget.auth.api.get('/pets/mine');
       setState(() {
-        pets = p as List? ?? [];
-        appointments = a as List? ?? [];
+        home = dash is Map<String, dynamic> ? dash : {};
+        pets = mine as List? ?? [];
         loading = false;
       });
     } catch (_) {
@@ -36,11 +36,20 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  String _fmt(dynamic value) {
+    if (value == null) return '';
+    final raw = value.toString();
+    if (raw.length >= 16) return raw.substring(0, 16).replaceFirst('T', ' ');
+    return raw;
+  }
+
   @override
   Widget build(BuildContext context) {
     final i = I18n.instance;
     final name = widget.auth.user?['firstName'] ?? '';
-    final upcoming = appointments.where((e) => e['status'] != 'CANCELLED' && e['status'] != 'COMPLETED').toList();
+    final next = home['nextAppointment'] is Map ? home['nextAppointment'] as Map : {};
+    final vaccine = home['nextVaccine'] is Map ? home['nextVaccine'] as Map : {};
+    final treatments = home['activeTreatments'] as List? ?? [];
     return SafeArea(
       child: RefreshIndicator(
         onRefresh: _load,
@@ -59,7 +68,13 @@ class _HomeScreenState extends State<HomeScreen> {
                       padding: const EdgeInsets.only(right: 12),
                       child: InkWell(
                         onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => PetDetailScreen(auth: widget.auth, pet: pet))),
-                        child: Chip(avatar: CircleAvatar(child: Text('${pet['name']}'.substring(0, 1))), label: Text('${pet['name']}')),
+                        child: Chip(
+                          avatar: CircleAvatar(
+                            backgroundImage: (pet['photoUrl'] as String?)?.isNotEmpty == true ? NetworkImage(pet['photoUrl']) : null,
+                            child: (pet['photoUrl'] as String?)?.isNotEmpty == true ? null : Text('${pet['name']}'.substring(0, 1)),
+                          ),
+                          label: Text('${pet['name']}'),
+                        ),
                       ),
                     ),
                 ],
@@ -67,11 +82,31 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             Card(
               child: ListTile(
+                leading: const Icon(Icons.event),
                 title: Text(i.t('nextAppointment')),
-                subtitle: Text(upcoming.isEmpty ? i.t('empty') : '${upcoming.first['petName']} · ${upcoming.first['startAt']}'),
+                subtitle: Text(next['id'] == null ? i.t('empty') : '${next['pet'] ?? ''} · ${_fmt(next['startAt'])}'),
+              ),
+            ),
+            const SizedBox(height: 8),
+            Card(
+              child: ListTile(
+                leading: const Icon(Icons.vaccines_outlined),
+                title: Text(i.t('nextVaccine')),
+                subtitle: Text(vaccine['id'] == null ? i.t('empty') : '${vaccine['pet'] ?? ''} · ${vaccine['vaccine'] ?? ''}'),
+              ),
+            ),
+            const SizedBox(height: 8),
+            Card(
+              child: ListTile(
+                leading: const Icon(Icons.healing_outlined),
+                title: Text(i.t('activeTreatments')),
+                subtitle: Text(treatments.isEmpty ? i.t('empty') : treatments.map((t) => '${t['petName']}: ${t['name']}').join('\n')),
+                isThreeLine: treatments.length > 1,
               ),
             ),
             const SizedBox(height: 12),
+            Text(i.t('quickActions'), style: Theme.of(context).textTheme.titleMedium),
+            const SizedBox(height: 8),
             FilledButton.icon(
               onPressed: pets.isEmpty ? null : () => Navigator.push(context, MaterialPageRoute(builder: (_) => BookScreen(auth: widget.auth, pets: pets))),
               icon: const Icon(Icons.add),

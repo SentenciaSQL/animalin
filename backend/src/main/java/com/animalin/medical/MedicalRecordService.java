@@ -218,6 +218,41 @@ public class MedicalRecordService {
     }
 
     @Transactional(readOnly = true)
+    public List<AppDtos.LaboratoryResponse> laboratories(Long petId) {
+        Pet pet = accessGuard.requirePet(petId);
+        denySensitiveIfReceptionist();
+        return laboratoryResultRepository.findByPetIdAndTenantIdOrderByCollectedAtDesc(pet.getId(), pet.getTenantId())
+                .stream().map(this::toLab).toList();
+    }
+
+    @Transactional
+    public AppDtos.LaboratoryResponse createLaboratory(AppDtos.LaboratoryRequest request) {
+        accessGuard.requirePermission("MEDICAL_RECORD_WRITE");
+        Pet pet = accessGuard.requirePet(request.petId());
+        LaboratoryResult lab = new LaboratoryResult();
+        lab.setTenantId(pet.getTenantId());
+        lab.setPet(pet);
+        lab.setConsultationId(request.consultationId());
+        lab.setName(request.name());
+        lab.setLabName(request.labName());
+        lab.setCollectedAt(request.collectedAt() == null ? Instant.now() : request.collectedAt());
+        lab.setResultSummary(request.resultSummary());
+        lab.setStatus(request.status() == null ? "COMPLETED" : request.status());
+        if (request.veterinarianId() != null) {
+            lab.setVeterinarian(veterinarianRepository.findByIdAndTenantId(request.veterinarianId(), pet.getTenantId())
+                    .orElseThrow(() -> ApiException.notFound("Veterinario no encontrado")));
+        }
+        laboratoryResultRepository.save(lab);
+        auditService.record("CREATE", "LAB", lab.getId(), lab.getName());
+        if (pet.getOwner().getUser() != null) {
+            notificationService.notifyUser(pet.getTenantId(), pet.getOwner().getUser().getId(),
+                    "LAB_RESULT", "Resultado de laboratorio", "Lab result available",
+                    lab.getName(), lab.getName(), "LAB", lab.getId());
+        }
+        return toLab(lab);
+    }
+
+    @Transactional(readOnly = true)
     public List<AppDtos.TreatmentResponse> treatments(Long petId) {
         Pet pet = accessGuard.requirePet(petId);
         return treatmentRepository.findByPetIdAndTenantIdOrderByStartDateDesc(pet.getId(), pet.getTenantId())
@@ -378,6 +413,13 @@ public class MedicalRecordService {
                 c.getTreatmentPlan(), c.getRecommendations(),
                 hideInternal ? null : c.getInternalNotes(),
                 c.getNextControlAt(), c.getStatus()
+        );
+    }
+
+    private AppDtos.LaboratoryResponse toLab(LaboratoryResult l) {
+        return new AppDtos.LaboratoryResponse(
+                l.getId(), l.getPet().getId(), l.getName(), l.getLabName(), l.getCollectedAt(),
+                l.getResultSummary(), l.getStatus(), vetName(l.getVeterinarian())
         );
     }
 }

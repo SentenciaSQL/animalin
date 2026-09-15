@@ -50,7 +50,11 @@
     "hasAccount": "¿Ya tiene cuenta?",
     "firstName": "Nombre",
     "lastName": "Apellidos",
-    "createOwner": "Registro de propietario"
+    "createOwner": "Registro de propietario",
+    "resetTitle": "Restablecer contraseña",
+    "resetToken": "Código de restablecimiento",
+    "resetSubmit": "Guardar nueva contraseña",
+    "resetDone": "Contraseña actualizada. Ya puede iniciar sesión."
   },
   "nav": {
     "dashboard": "Inicio",
@@ -67,6 +71,7 @@
     "admin": "Plataforma",
     "tenants": "Veterinarias",
     "plans": "Planes",
+    "subscriptions": "Suscripciones",
     "users": "Usuarios",
     "profile": "Perfil",
     "logout": "Cerrar sesión",
@@ -98,7 +103,10 @@
     "species": "Especies atendidas",
     "appointmentsMonth": "Citas por mes",
     "recentVaccines": "Próximas vacunas",
-    "emptyAgenda": "No hay citas programadas para hoy"
+    "emptyAgenda": "No hay citas programadas para hoy",
+    "ownerTitle": "El cuidado de sus mascotas",
+    "ownerSubtitle": "Citas, vacunas y tratamientos en un vistazo",
+    "reminders": "Recordatorios"
   },
   "admin": {
     "title": "Super administración",
@@ -116,7 +124,9 @@
     "plan": "Plan",
     "status": "Estado",
     "activate": "Activar",
-    "suspend": "Suspender"
+    "suspend": "Suspender",
+    "plansSubtitle": "Planes y límites de la plataforma",
+    "subscriptions": "Suscripciones"
   },
   "owners": {
     "title": "Propietarios",
@@ -167,7 +177,10 @@
     "start": "Iniciar",
     "complete": "Completar",
     "reason": "Motivo",
-    "empty": "No hay citas en este periodo"
+    "empty": "No hay citas en este periodo",
+    "waiting": "Espera",
+    "noShow": "No asistió",
+    "reschedule": "Reprogramar"
   },
   "consultations": {
     "new": "Nueva consulta",
@@ -180,20 +193,35 @@
     "recommendations": "Recomendaciones",
     "vitals": "Signos vitales",
     "anamnesis": "Anamnesis",
-    "internal": "Notas internas"
+    "internal": "Notas internas",
+    "differential": "Diagnóstico diferencial",
+    "followUp": "Próximo control",
+    "kg": "Peso (kg)",
+    "temp": "Temperatura (°C)",
+    "hr": "Frecuencia cardíaca",
+    "rr": "Frecuencia respiratoria"
   },
   "messages": {
     "title": "Mensajes",
     "disclaimer": "Este canal no sustituye una emergencia veterinaria. En caso de urgencia, acuda a la clínica o llame por teléfono.",
     "send": "Enviar",
-    "empty": "Seleccione una conversación"
+    "empty": "Seleccione una conversación",
+    "new": "Nueva conversación",
+    "subject": "Asunto"
   },
   "reports": {
     "title": "Reportes",
     "subtitle": "Exportaciones de actividad clínica",
     "appointments": "Citas (Excel)",
     "owners": "Propietarios (CSV)",
-    "pets": "Mascotas (CSV)"
+    "pets": "Mascotas (CSV)",
+    "consultations": "Consultas (CSV)",
+    "vaccines": "Vacunas (CSV)",
+    "from": "Desde",
+    "to": "Hasta",
+    "veterinarian": "Veterinario",
+    "branch": "Sucursal",
+    "export": "Exportar"
   },
   "settings": {
     "title": "Identidad de la veterinaria",
@@ -203,7 +231,13 @@
     "logo": "Logo",
     "logoDark": "Logo para fondo oscuro",
     "icon": "Icono",
-    "upload": "Subir imagen"
+    "upload": "Subir imagen",
+    "ops": "Operación y notificaciones",
+    "slot": "Duración predeterminada de cita (min)",
+    "cancelHours": "Horas mínimas para cancelar",
+    "dateFormat": "Formato de fecha",
+    "notifyEmail": "Notificaciones por email",
+    "notifyPush": "Notificaciones push"
   },
   "team": { "title": "Equipo veterinario", "new": "Añadir veterinario", "specialty": "Especialidad" },
   "branches": { "title": "Sucursales", "new": "Nueva sucursal" },

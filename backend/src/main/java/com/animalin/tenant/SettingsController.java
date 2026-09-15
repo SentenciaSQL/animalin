@@ -15,11 +15,9 @@ import org.springframework.web.multipart.MultipartFile;
 public class SettingsController {
 
     private final BrandingService brandingService;
-    private final TenantSettingsRepository settingsRepository;
 
-    public SettingsController(BrandingService brandingService, TenantSettingsRepository settingsRepository) {
+    public SettingsController(BrandingService brandingService) {
         this.brandingService = brandingService;
-        this.settingsRepository = settingsRepository;
     }
 
     @GetMapping("/branding")
@@ -39,13 +37,12 @@ public class SettingsController {
     }
 
     @GetMapping
-    public TenantSettings settings() {
-        return settingsRepository.findByTenantId(com.animalin.security.TenantContext.tenantId())
-                .orElseThrow();
+    public AppDtos.SettingsResponse settings() {
+        return brandingService.currentSettings();
     }
 
     @PutMapping
-    public TenantSettings updateSettings(@RequestBody BrandingService.SettingsUpdateRequest request) {
+    public AppDtos.SettingsResponse updateSettings(@RequestBody BrandingService.SettingsUpdateRequest request) {
         return brandingService.updateSettings(request);
     }
 }
