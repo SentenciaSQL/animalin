@@ -12,8 +12,8 @@ import { ApiService } from '../../core/services/api.service';
       @for (p of plans(); track p.id) {
         <div class="card space-y-2">
           <p class="text-xs uppercase tracking-wide text-slate-400">{{ p.code }}</p>
-          <h2 class="font-display text-xl font-semibold">{{ locale === 'en' ? p.nameEn : p.nameEs }}</h2>
-          <p class="text-sm text-slate-500">{{ locale === 'en' ? p.descriptionEn : p.descriptionEs }}</p>
+          <h2 class="font-display text-xl font-semibold">{{ locale() === 'en' ? p.nameEn : p.nameEs }}</h2>
+          <p class="text-sm text-slate-500">{{ locale() === 'en' ? p.descriptionEn : p.descriptionEs }}</p>
           <p class="text-2xl font-semibold">{{ p.monthlyPrice }} €</p>
           <ul class="text-sm text-slate-500">
             <li>{{ p.maxUsers }} {{ 'admin.users' | translate }}</li>
@@ -29,7 +29,7 @@ export class AdminPlansPage implements OnInit {
   private api = inject(ApiService);
   private i18n = inject(TranslateService);
   plans = signal<any[]>([]);
-  get locale() { return this.i18n.currentLang; }
+  locale = this.i18n.currentLang;
   ngOnInit() {
     this.api.get<any[]>('/admin/plans').subscribe(p => this.plans.set(p));
   }
