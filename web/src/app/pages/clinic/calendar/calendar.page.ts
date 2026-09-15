@@ -4,6 +4,7 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
 import { ApiService } from '../../../core/services/api.service';
+import { AuthService } from '../../../core/services/auth.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { Appointment, PageResponse, Pet } from '../../../core/models';
 import { StatusBadgePipe } from '../../../shared/ui/status-badge.pipe';
@@ -25,7 +26,9 @@ import { EmptyStateComponent } from '../../../shared/ui/empty-state.component';
         <button class="btn-secondary" [class.bg-brand-50]="view()==='day'" (click)="view.set('day')">{{ 'common.day' | translate }}</button>
         <button class="btn-secondary" [class.bg-brand-50]="view()==='week'" (click)="view.set('week')">{{ 'common.week' | translate }}</button>
         <button class="btn-secondary" [class.bg-brand-50]="view()==='month'" (click)="view.set('month')">{{ 'common.month' | translate }}</button>
-        <button class="btn-primary" (click)="open=true">{{ 'calendar.new' | translate }}</button>
+        @if (auth.isStaff()) {
+          <button class="btn-primary" (click)="open=true">{{ 'calendar.new' | translate }}</button>
+        }
       </div>
     </div>
     <p class="mt-3 text-sm font-medium text-slate-500">{{ rangeLabel() }}</p>
@@ -39,23 +42,26 @@ import { EmptyStateComponent } from '../../../shared/ui/empty-state.component';
           </div>
           <div class="flex flex-wrap items-center gap-2">
             <span [class]="a.status | statusBadge">{{ a.status }}</span>
-            @if (a.status === 'PENDING' || a.status === 'REQUESTED') {
+            @if (auth.isStaff() && (a.status === 'PENDING' || a.status === 'REQUESTED')) {
               <button class="btn-secondary text-xs" (click)="status(a.id,'CONFIRMED')">{{ 'calendar.confirm' | translate }}</button>
             }
-            @if (a.status === 'CONFIRMED') {
+            @if (auth.isStaff() && a.status === 'CONFIRMED') {
               <button class="btn-secondary text-xs" (click)="status(a.id,'ARRIVED')">{{ 'calendar.arrived' | translate }}</button>
               <button class="btn-secondary text-xs" (click)="status(a.id,'WAITING')">{{ 'calendar.waiting' | translate }}</button>
             }
-            @if (a.status === 'ARRIVED' || a.status === 'WAITING') {
+            @if (auth.isStaff() && (a.status === 'ARRIVED' || a.status === 'WAITING')) {
               <button class="btn-primary text-xs" (click)="status(a.id,'IN_PROGRESS')">{{ 'calendar.start' | translate }}</button>
               <a class="btn-secondary text-xs" [routerLink]="['/consultations/new']" [queryParams]="{ petId: a.petId, appointmentId: a.id }">{{ 'consultations.new' | translate }}</a>
             }
-            @if (a.status === 'IN_PROGRESS') {
+            @if (auth.isStaff() && a.status === 'IN_PROGRESS') {
               <button class="btn-primary text-xs" (click)="status(a.id,'COMPLETED')">{{ 'calendar.complete' | translate }}</button>
             }
-            @if (a.status !== 'COMPLETED' && a.status !== 'CANCELLED' && a.status !== 'NO_SHOW') {
+            @if (auth.isStaff() && a.status !== 'COMPLETED' && a.status !== 'CANCELLED' && a.status !== 'NO_SHOW') {
               <button class="btn-secondary text-xs" (click)="status(a.id,'CANCELLED')">{{ 'common.cancel' | translate }}</button>
               <button class="btn-secondary text-xs" (click)="status(a.id,'NO_SHOW')">{{ 'calendar.noShow' | translate }}</button>
+            }
+            @if (!auth.isStaff() && (a.status === 'REQUESTED' || a.status === 'PENDING' || a.status === 'CONFIRMED')) {
+              <button class="btn-secondary text-xs" (click)="status(a.id,'CANCELLED')">{{ 'common.cancel' | translate }}</button>
             }
           </div>
         </div>
@@ -88,6 +94,7 @@ import { EmptyStateComponent } from '../../../shared/ui/empty-state.component';
 export class CalendarPage implements OnInit {
   private api = inject(ApiService);
   private toast = inject(ToastService);
+  auth = inject(AuthService);
   private fb = inject(FormBuilder);
   items = signal<Appointment[]>([]);
   pets = signal<Pet[]>([]);
@@ -121,9 +128,11 @@ export class CalendarPage implements OnInit {
 
   ngOnInit() {
     this.reload();
-    this.api.get<PageResponse<Pet>>('/pets', { size: 100 }).subscribe(r => this.pets.set(r.content || []));
-    this.api.get<any[]>('/veterinarians').subscribe(r => this.vets.set(r));
-    this.api.get<any[]>('/services').subscribe(r => this.services.set(r));
+    if (this.auth.isStaff()) {
+      this.api.get<PageResponse<Pet>>('/pets', { size: 100 }).subscribe(r => this.pets.set(r.content || []));
+      this.api.get<any[]>('/veterinarians').subscribe(r => this.vets.set(r));
+      this.api.get<any[]>('/services').subscribe(r => this.services.set(r));
+    }
   }
 
   rangeStart() {
@@ -162,6 +171,10 @@ export class CalendarPage implements OnInit {
   }
 
   reload() {
+    if (!this.auth.isStaff()) {
+      this.api.get<Appointment[]>('/appointments/mine').subscribe(r => this.items.set(r));
+      return;
+    }
     const from = new Date(this.rangeStart());
     from.setDate(from.getDate() - 1);
     const to = new Date(this.rangeEnd());
