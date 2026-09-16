@@ -2,6 +2,8 @@ package com.animalin.report;
 
 import com.animalin.appointment.Appointment;
 import com.animalin.appointment.AppointmentRepository;
+import com.animalin.medical.ConsultationRepository;
+import com.animalin.medical.VaccinationRepository;
 import com.animalin.owner.OwnerRepository;
 import com.animalin.pet.PetRepository;
 import com.animalin.security.AccessGuard;
@@ -30,21 +32,25 @@ public class ReportService {
     private final AppointmentRepository appointmentRepository;
     private final OwnerRepository ownerRepository;
     private final PetRepository petRepository;
+    private final ConsultationRepository consultationRepository;
+    private final VaccinationRepository vaccinationRepository;
     private final AccessGuard accessGuard;
 
-    public ReportService(AppointmentRepository appointmentRepository, OwnerRepository ownerRepository, PetRepository petRepository, AccessGuard accessGuard) {
+    public ReportService(AppointmentRepository appointmentRepository, OwnerRepository ownerRepository, PetRepository petRepository,
+                         ConsultationRepository consultationRepository, VaccinationRepository vaccinationRepository, AccessGuard accessGuard) {
         this.appointmentRepository = appointmentRepository;
         this.ownerRepository = ownerRepository;
         this.petRepository = petRepository;
+        this.consultationRepository = consultationRepository;
+        this.vaccinationRepository = vaccinationRepository;
         this.accessGuard = accessGuard;
     }
 
-
     @Transactional(readOnly = true)
-    public byte[] appointmentsExcel(Instant from, Instant to) {
+    public byte[] appointmentsExcel(Instant from, Instant to, Long veterinarianId, Long branchId, String status) {
         accessGuard.requirePermission("REPORT_VIEW");
         Long tenantId = accessGuard.requireStaffTenant();
-        List<Appointment> appointments = appointmentRepository.calendar(tenantId, from, to, null, null, null);
+        List<Appointment> appointments = appointmentRepository.calendar(tenantId, from, to, veterinarianId, branchId, status);
         try (XSSFWorkbook workbook = new XSSFWorkbook(); ByteArrayOutputStream out = new ByteArrayOutputStream()) {
             Sheet sheet = workbook.createSheet("Citas");
             Row header = sheet.createRow(0);
@@ -89,6 +95,39 @@ public class ReportService {
         return ("nombre,especie,raza,propietario\n" + body).getBytes(StandardCharsets.UTF_8);
     }
 
+    @Transactional(readOnly = true)
+    public byte[] consultationsCsv(Instant from, Instant to) {
+        accessGuard.requirePermission("REPORT_VIEW");
+        Long tenantId = accessGuard.requireStaffTenant();
+        String body = consultationRepository.findByTenantIdAndConsultedAtBetweenOrderByConsultedAtDesc(tenantId, from, to)
+                .stream()
+                .map(c -> String.join(",",
+                        csv(c.getConsultedAt() == null ? "" : c.getConsultedAt().toString()),
+                        csv(c.getPet().getName()),
+                        csv(c.getVeterinarian() == null ? "" : c.getVeterinarian().getUser().fullName()),
+                        csv(c.getReason()),
+                        csv(c.getDiagnosis()),
+                        csv(c.getStatus())))
+                .collect(Collectors.joining("\n"));
+        return ("fecha,mascota,veterinario,motivo,diagnostico,estado\n" + body).getBytes(StandardCharsets.UTF_8);
+    }
+
+    @Transactional(readOnly = true)
+    public byte[] vaccinationsCsv() {
+        accessGuard.requirePermission("REPORT_VIEW");
+        Long tenantId = accessGuard.requireStaffTenant();
+        String body = vaccinationRepository.findByTenantIdOrderByAppliedAtDesc(tenantId).stream()
+                .map(v -> String.join(",",
+                        csv(v.getPet().getName()),
+                        csv(v.getVaccineName()),
+                        csv(v.getBrand()),
+                        csv(v.getAppliedAt() == null ? "" : v.getAppliedAt().toString()),
+                        csv(v.getNextDoseAt() == null ? "" : v.getNextDoseAt().toString()),
+                        csv(v.statusCode())))
+                .collect(Collectors.joining("\n"));
+        return ("mascota,vacuna,marca,aplicada,proxima,estado\n" + body).getBytes(StandardCharsets.UTF_8);
+    }
+
     private String csv(String value) {
         return "\"" + (value == null ? "" : value.replace("\"", "'")) + "\"";
     }
@@ -103,13 +142,17 @@ class ReportController {
         this.reportService = reportService;
     }
 
-
     @GetMapping("/appointments.xlsx")
-    public ResponseEntity<byte[]> appointments(@RequestParam Instant from, @RequestParam Instant to) {
+    public ResponseEntity<byte[]> appointments(
+            @RequestParam Instant from,
+            @RequestParam Instant to,
+            @RequestParam(required = false) Long veterinarianId,
+            @RequestParam(required = false) Long branchId,
+            @RequestParam(required = false) String status) {
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=citas.xlsx")
                 .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
-                .body(reportService.appointmentsExcel(from, to));
+                .body(reportService.appointmentsExcel(from, to, veterinarianId, branchId, status));
     }
 
     @GetMapping("/owners.csv")
@@ -126,5 +169,21 @@ class ReportController {
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=mascotas.csv")
                 .contentType(MediaType.parseMediaType("text/csv"))
                 .body(reportService.petsCsv());
+    }
+
+    @GetMapping("/consultations.csv")
+    public ResponseEntity<byte[]> consultations(@RequestParam Instant from, @RequestParam Instant to) {
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=consultas.csv")
+                .contentType(MediaType.parseMediaType("text/csv"))
+                .body(reportService.consultationsCsv(from, to));
+    }
+
+    @GetMapping("/vaccinations.csv")
+    public ResponseEntity<byte[]> vaccinations() {
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=vacunas.csv")
+                .contentType(MediaType.parseMediaType("text/csv"))
+                .body(reportService.vaccinationsCsv());
     }
 }

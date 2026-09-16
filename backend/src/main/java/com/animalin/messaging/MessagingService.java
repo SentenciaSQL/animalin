@@ -80,7 +80,7 @@ public class MessagingService {
     }
 
     @Transactional
-    public Conversation create(CreateRequest request) {
+    public Map<String, Object> create(CreateRequest request) {
         Long tenantId;
         Owner owner;
         Pet pet = null;
@@ -101,11 +101,20 @@ public class MessagingService {
         if (owner.getUser() != null) {
             conversation.getParticipants().add(owner.getUser());
         }
-        return conversationRepository.save(conversation);
+        conversationRepository.save(conversation);
+        return Map.of(
+                "id", conversation.getId(),
+                "subject", conversation.getSubject() == null ? "" : conversation.getSubject(),
+                "tenantId", conversation.getTenantId(),
+                "ownerName", owner.fullName(),
+                "petName", pet == null ? "" : pet.getName(),
+                "lastMessage", "",
+                "unread", 0L
+        );
     }
 
     @Transactional
-    public Message send(Long conversationId, SendRequest request) {
+    public AppDtos.MessageResponse send(Long conversationId, SendRequest request) {
         Conversation conversation = requireConversation(conversationId);
         User sender = userRepository.getReferenceById(TenantContext.userId());
         Message message = new Message();
@@ -121,7 +130,14 @@ public class MessagingService {
                 .forEach(u -> notificationService.notifyUser(conversation.getTenantId(), u.getId(),
                         "NEW_MESSAGE", "Nuevo mensaje", "New message",
                         request.body(), request.body(), "CONVERSATION", conversation.getId()));
-        return message;
+        return new AppDtos.MessageResponse(
+                message.getId(),
+                sender.getId(),
+                sender.fullName(),
+                message.getBody(),
+                message.getCreatedAt(),
+                message.getReadAt()
+        );
     }
 
     private Conversation requireConversation(Long id) {
@@ -162,7 +178,7 @@ class MessagingController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public Conversation create(@RequestBody MessagingService.CreateRequest request) {
+    public Map<String, Object> create(@RequestBody MessagingService.CreateRequest request) {
         return messagingService.create(request);
     }
 
@@ -172,7 +188,7 @@ class MessagingController {
     }
 
     @PostMapping("/{id}")
-    public Message send(@PathVariable Long id, @RequestBody MessagingService.SendRequest request) {
+    public AppDtos.MessageResponse send(@PathVariable Long id, @RequestBody MessagingService.SendRequest request) {
         return messagingService.send(id, request);
     }
 }

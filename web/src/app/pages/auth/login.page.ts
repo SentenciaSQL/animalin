@@ -16,11 +16,11 @@ import { ThemeSelectorComponent } from '../../shared/ui/theme-selector.component
       <section class="relative hidden flex-col justify-between bg-brand-800 p-10 text-white lg:flex">
         <app-brand-mark />
         <div>
-          <p class="text-sm uppercase tracking-[0.2em] text-brand-100">Animalin</p>
+          <p class="text-sm uppercase tracking-[0.2em] text-brand-100">{{ 'app.name' | translate }}</p>
           <h1 class="mt-4 max-w-md font-display text-4xl font-semibold leading-tight">{{ 'app.tagline' | translate }}</h1>
           <p class="mt-4 max-w-md text-brand-50/80">{{ 'auth.subtitle' | translate }}</p>
         </div>
-        <p class="text-sm text-brand-100/70">© {{ year }} Animalin</p>
+        <p class="text-sm text-brand-100/70">© {{ year }} {{ 'app.name' | translate }}</p>
       </section>
       <section class="flex flex-col justify-center px-6 py-12 sm:px-12">
         <div class="mb-8 flex items-center justify-between">

@@ -37,6 +37,10 @@ class AuthStore extends ChangeNotifier {
     await _persist(data as Map<String, dynamic>);
   }
 
+  Future<void> forgot(String email) async {
+    await api.post('/auth/forgot-password', {'email': email});
+  }
+
   Future<void> logout() async {
     if (refreshToken != null) {
       try {

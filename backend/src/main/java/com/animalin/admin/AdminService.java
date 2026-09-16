@@ -156,6 +156,22 @@ public class AdminService {
         return planRepository.findByActiveTrueOrderByMonthlyPriceAsc();
     }
 
+    @Transactional(readOnly = true)
+    public List<Map<String, Object>> subscriptions() {
+        return subscriptionRepository.findAll().stream().map(s -> {
+            Map<String, Object> row = new java.util.LinkedHashMap<>();
+            row.put("id", s.getId());
+            row.put("status", s.getStatus());
+            row.put("trial", s.isTrial());
+            row.put("startedAt", s.getStartedAt());
+            row.put("currentPeriodEnd", s.getCurrentPeriodEnd());
+            row.put("cancelledAt", s.getCancelledAt());
+            row.put("tenantName", s.getTenant().getName());
+            row.put("planCode", s.getPlan().getCode());
+            return row;
+        }).toList();
+    }
+
     public record CreateTenantRequest(
             String slug, String name, String commercialName, String email, String phone, String address,
             String city, String country, String timezone, String currency, String locale, String planCode,
