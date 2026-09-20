@@ -4,6 +4,7 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
 import { ApiService } from '../../../core/services/api.service';
+import { AuthService } from '../../../core/services/auth.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { EmptyStateComponent } from '../../../shared/ui/empty-state.component';
 import { Owner, PageResponse, Pet } from '../../../core/models';
@@ -17,7 +18,9 @@ import { Owner, PageResponse, Pet } from '../../../core/models';
         <h1 class="font-display text-2xl font-semibold">{{ 'pets.title' | translate }}</h1>
         <p class="text-sm text-slate-500">{{ 'pets.subtitle' | translate }}</p>
       </div>
-      <button class="btn-primary" (click)="open=true">{{ 'pets.new' | translate }}</button>
+      @if (auth.isStaff()) {
+        <button class="btn-primary" (click)="open=true">{{ 'pets.new' | translate }}</button>
+      }
     </div>
     <div class="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
       @if (rows().length === 0) {
@@ -69,6 +72,7 @@ import { Owner, PageResponse, Pet } from '../../../core/models';
 export class PetsPage implements OnInit {
   private api = inject(ApiService);
   private toast = inject(ToastService);
+  auth = inject(AuthService);
   private fb = inject(FormBuilder);
   rows = signal<Pet[]>([]);
   owners = signal<Owner[]>([]);
@@ -82,8 +86,12 @@ export class PetsPage implements OnInit {
   });
 
   ngOnInit() {
-    this.api.get<PageResponse<Pet>>('/pets', { page: 0, size: 50 }).subscribe(r => this.rows.set(r.content || []));
-    this.api.get<PageResponse<Owner>>('/owners', { page: 0, size: 100 }).subscribe(r => this.owners.set(r.content || []));
+    if (this.auth.isStaff()) {
+      this.api.get<PageResponse<Pet>>('/pets', { page: 0, size: 50 }).subscribe(r => this.rows.set(r.content || []));
+      this.api.get<PageResponse<Owner>>('/owners', { page: 0, size: 100 }).subscribe(r => this.owners.set(r.content || []));
+    } else {
+      this.api.get<Pet[]>('/pets/mine').subscribe(r => this.rows.set(r || []));
+    }
   }
 
   save() {

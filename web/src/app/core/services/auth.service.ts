@@ -62,6 +62,10 @@ export class AuthService {
     return this.api.post('/auth/forgot-password', { email });
   }
 
+  reset(token: string, password: string) {
+    return this.api.post('/auth/reset-password', { token, password });
+  }
+
   patchMe(payload: Partial<Pick<UserProfile, 'firstName' | 'lastName' | 'phone' | 'locale' | 'theme'>>) {
     return this.api.patch<UserProfile>('/auth/me', payload).pipe(tap(user => this.setUser(user)));
   }

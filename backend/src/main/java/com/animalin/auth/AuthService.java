@@ -193,10 +193,14 @@ public class AuthService {
 
     private Tenant resolveTenant(String slug, List<TenantMembership> memberships, boolean superAdmin, User user) {
         boolean petOwner = user.getRoles().stream().anyMatch(r -> "PET_OWNER".equals(r.getCode()));
+        boolean staffMembership = memberships.stream().anyMatch(m -> {
+            String code = m.getRole().getCode();
+            return "TENANT_ADMIN".equals(code) || "VETERINARIAN".equals(code) || "RECEPTIONIST".equals(code);
+        });
         if (superAdmin && (slug == null || slug.isBlank())) {
             return null;
         }
-        if (petOwner && memberships.isEmpty()) {
+        if (petOwner && !staffMembership) {
             return null;
         }
         if (slug != null && !slug.isBlank()) {

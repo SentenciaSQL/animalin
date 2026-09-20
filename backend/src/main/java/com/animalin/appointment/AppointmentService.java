@@ -32,6 +32,7 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 @Service
@@ -39,6 +40,17 @@ public class AppointmentService {
 
     private static final Set<String> OPEN_STATUSES = Set.of(
             "REQUESTED", "PENDING", "CONFIRMED", "ARRIVED", "WAITING", "IN_PROGRESS"
+    );
+    private static final Map<String, Set<String>> TRANSITIONS = Map.of(
+            "REQUESTED", Set.of("PENDING", "CONFIRMED", "CANCELLED"),
+            "PENDING", Set.of("CONFIRMED", "CANCELLED"),
+            "CONFIRMED", Set.of("ARRIVED", "WAITING", "CANCELLED", "NO_SHOW"),
+            "ARRIVED", Set.of("WAITING", "IN_PROGRESS", "CANCELLED", "NO_SHOW"),
+            "WAITING", Set.of("IN_PROGRESS", "CANCELLED", "NO_SHOW"),
+            "IN_PROGRESS", Set.of("COMPLETED", "CANCELLED"),
+            "COMPLETED", Set.of(),
+            "CANCELLED", Set.of(),
+            "NO_SHOW", Set.of()
     );
 
     private final AppointmentRepository appointmentRepository;
@@ -129,12 +141,17 @@ public class AppointmentService {
     @Transactional
     public AppDtos.AppointmentResponse changeStatus(Long id, String status) {
         Appointment appointment = requireAppointment(id);
+        String current = appointment.getStatus();
         if (accessGuard.isOwnerContext()) {
-            if (!Set.of("CANCELLED").contains(status)) {
+            if (!"CANCELLED".equals(status) || !OPEN_STATUSES.contains(current)) {
                 throw ApiException.forbidden("Solo puede cancelar la cita");
             }
         } else {
             accessGuard.requirePermission("APPOINTMENT_UPDATE");
+            Set<String> allowed = TRANSITIONS.getOrDefault(current, Set.of());
+            if (!allowed.contains(status)) {
+                throw ApiException.badRequest("Transición de cita no permitida: " + current + " → " + status);
+            }
         }
         appointment.setStatus(status);
         auditService.record("STATUS", "APPOINTMENT", appointment.getId(), status);

@@ -40,6 +40,23 @@ import { Branding } from '../../../core/models';
         <button class="btn-primary">{{ 'common.save' | translate }}</button>
       }
     </form>
+    <form class="card mt-6 max-w-2xl space-y-4" [formGroup]="ops" (ngSubmit)="saveOps()">
+      <h2 class="font-medium">{{ 'settings.ops' | translate }}</h2>
+      <label class="text-sm">{{ 'settings.slot' | translate }}
+        <input class="input mt-1" type="number" formControlName="defaultAppointmentMin" />
+      </label>
+      <label class="text-sm">{{ 'settings.cancelHours' | translate }}
+        <input class="input mt-1" type="number" formControlName="cancellationHours" />
+      </label>
+      <label class="text-sm">{{ 'settings.dateFormat' | translate }}
+        <input class="input mt-1" formControlName="dateFormat" />
+      </label>
+      <label class="flex items-center gap-2 text-sm"><input type="checkbox" formControlName="notifyEmail" /> {{ 'settings.notifyEmail' | translate }}</label>
+      <label class="flex items-center gap-2 text-sm"><input type="checkbox" formControlName="notifyPush" /> {{ 'settings.notifyPush' | translate }}</label>
+      @if (auth.hasPermission('SETTINGS_UPDATE')) {
+        <button class="btn-primary">{{ 'common.save' | translate }}</button>
+      }
+    </form>
   `
 })
 export class SettingsPage implements OnInit {
@@ -51,9 +68,17 @@ export class SettingsPage implements OnInit {
   form = this.fb.group({
     name: [''], commercialName: [''], email: [''], phone: [''], website: [''], address: [''], instagram: [''], facebook: ['']
   });
+  ops = this.fb.group({
+    dateFormat: ['dd/MM/yyyy'],
+    defaultAppointmentMin: [30],
+    cancellationHours: [12],
+    notifyEmail: [true],
+    notifyPush: [true]
+  });
 
   ngOnInit() {
     this.api.get<Branding>('/settings/branding').subscribe(b => this.form.patchValue(b));
+    this.api.get<any>('/settings').subscribe(s => this.ops.patchValue(s));
   }
 
   save() {
@@ -68,6 +93,13 @@ export class SettingsPage implements OnInit {
     if (!file) return;
     this.api.upload<Branding>('/settings/branding/logo', file, { variant }).subscribe({
       next: (b) => { this.branding.branding.set(b); this.toast.show('common.saved'); },
+      error: () => this.toast.show('common.error', true)
+    });
+  }
+
+  saveOps() {
+    this.api.put('/settings', this.ops.value).subscribe({
+      next: () => this.toast.show('common.saved'),
       error: () => this.toast.show('common.error', true)
     });
   }

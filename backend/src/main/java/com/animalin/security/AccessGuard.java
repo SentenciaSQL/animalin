@@ -56,7 +56,7 @@ public class AccessGuard {
     }
 
     public boolean isOwnerContext() {
-        return TenantContext.tenantIdOrNull() == null && TenantContext.hasRole("PET_OWNER");
+        return TenantContext.isPetOwner();
     }
 
     public void denyIfOwner() {

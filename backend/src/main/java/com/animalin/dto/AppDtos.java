@@ -140,4 +140,31 @@ public final class AppDtos {
 
     public record SlotResponse(Instant startAt, Instant endAt) {
     }
+
+    public record LaboratoryRequest(Long petId, Long veterinarianId, Long consultationId, String name,
+                                    String labName, Instant collectedAt, String resultSummary, String status) {
+    }
+
+    public record LaboratoryResponse(Long id, Long petId, String name, String labName, Instant collectedAt,
+                                     String resultSummary, String status, String veterinarianName) {
+    }
+
+    public record WeightRequest(BigDecimal weightKg, String notes) {
+    }
+
+    public record WeightResponse(Long id, Long petId, Instant recordedAt, BigDecimal weightKg, String notes) {
+    }
+
+    public record DocumentResponse(Long id, String title, String category, Instant createdAt, Long fileId, String url) {
+    }
+
+    public record SettingsResponse(
+            String dateFormat,
+            int defaultAppointmentMin,
+            int cancellationHours,
+            boolean notifyEmail,
+            boolean notifyPush,
+            String enabledLocales
+    ) {
+    }
 }
