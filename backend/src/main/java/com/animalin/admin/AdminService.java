@@ -2,9 +2,7 @@ package com.animalin.admin;
 
 import com.animalin.appointment.AppointmentRepository;
 import com.animalin.audit.AuditService;
-import com.animalin.common.api.PageResponse;
 import com.animalin.common.exception.ApiException;
-import com.animalin.dto.AppDtos;
 import com.animalin.owner.OwnerRepository;
 import com.animalin.pet.PetRepository;
 import com.animalin.plan.Plan;
@@ -20,12 +18,12 @@ import com.animalin.tenant.TenantSettingsRepository;
 import com.animalin.user.RoleRepository;
 import com.animalin.user.User;
 import com.animalin.user.UserRepository;
-import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
@@ -151,6 +149,62 @@ public class AdminService {
         return tenant;
     }
 
+    @Transactional
+    public Tenant updateTenant(Long id, UpdateTenantRequest request) {
+        Tenant tenant = tenantRepository.findById(id).orElseThrow(() -> ApiException.notFound("Veterinaria no encontrada"));
+        if (request.name() != null) tenant.setName(request.name());
+        if (request.commercialName() != null) tenant.setCommercialName(request.commercialName());
+        if (request.email() != null) tenant.setEmail(request.email());
+        if (request.phone() != null) tenant.setPhone(request.phone());
+        if (request.address() != null) tenant.setAddress(request.address());
+        if (request.city() != null) tenant.setCity(request.city());
+        if (request.country() != null) tenant.setCountry(request.country());
+        if (request.timezone() != null) tenant.setTimezone(request.timezone());
+        if (request.currency() != null) tenant.setCurrency(request.currency());
+        if (request.locale() != null) tenant.setDefaultLocale(request.locale());
+        if (request.planCode() != null) {
+            Plan plan = planRepository.findByCode(request.planCode()).orElseThrow(() -> ApiException.notFound("Plan no encontrado"));
+            tenant.setPlan(plan);
+        }
+        auditService.record(tenant.getId(), null, "platform", "UPDATE", "TENANT", tenant.getId(), tenant.getName(), null, null);
+        return tenant;
+    }
+
+    @Transactional
+    public Plan updatePlan(Long id, UpdatePlanRequest request) {
+        Plan plan = planRepository.findById(id).orElseThrow(() -> ApiException.notFound("Plan no encontrado"));
+        if (request.nameEs() != null) plan.setNameEs(request.nameEs());
+        if (request.nameEn() != null) plan.setNameEn(request.nameEn());
+        if (request.descriptionEs() != null) plan.setDescriptionEs(request.descriptionEs());
+        if (request.descriptionEn() != null) plan.setDescriptionEn(request.descriptionEn());
+        if (request.maxUsers() != null) plan.setMaxUsers(request.maxUsers());
+        if (request.maxVeterinarians() != null) plan.setMaxVeterinarians(request.maxVeterinarians());
+        if (request.maxBranches() != null) plan.setMaxBranches(request.maxBranches());
+        if (request.maxStorageMb() != null) plan.setMaxStorageMb(request.maxStorageMb());
+        if (request.maxMessagesMonth() != null) plan.setMaxMessagesMonth(request.maxMessagesMonth());
+        if (request.reportsEnabled() != null) plan.setReportsEnabled(request.reportsEnabled());
+        if (request.messagingEnabled() != null) plan.setMessagingEnabled(request.messagingEnabled());
+        if (request.laboratoryEnabled() != null) plan.setLaboratoryEnabled(request.laboratoryEnabled());
+        if (request.monthlyPrice() != null) plan.setMonthlyPrice(request.monthlyPrice());
+        if (request.active() != null) plan.setActive(request.active());
+        auditService.record(null, null, "platform", "UPDATE", "PLAN", plan.getId(), plan.getCode(), null, null);
+        return plan;
+    }
+
+    @Transactional(readOnly = true)
+    public List<Map<String, Object>> users() {
+        return userRepository.findAll().stream().map(user -> {
+            Map<String, Object> row = new java.util.LinkedHashMap<>();
+            row.put("id", user.getId());
+            row.put("email", user.getEmail());
+            row.put("fullName", user.fullName());
+            row.put("enabled", user.isEnabled());
+            row.put("locale", user.getLocale());
+            row.put("roles", user.getRoles().stream().map(r -> r.getCode()).toList());
+            return row;
+        }).toList();
+    }
+
     @Transactional(readOnly = true)
     public List<Plan> plans() {
         return planRepository.findByActiveTrueOrderByMonthlyPriceAsc();
@@ -176,6 +230,20 @@ public class AdminService {
             String slug, String name, String commercialName, String email, String phone, String address,
             String city, String country, String timezone, String currency, String locale, String planCode,
             String adminEmail, String adminFirstName, String adminLastName, String adminPassword
+    ) {
+    }
+
+    public record UpdateTenantRequest(
+            String name, String commercialName, String email, String phone, String address, String city,
+            String country, String timezone, String currency, String locale, String planCode
+    ) {
+    }
+
+    public record UpdatePlanRequest(
+            String nameEs, String nameEn, String descriptionEs, String descriptionEn,
+            Integer maxUsers, Integer maxVeterinarians, Integer maxBranches, Integer maxStorageMb,
+            Integer maxMessagesMonth, Boolean reportsEnabled, Boolean messagingEnabled, Boolean laboratoryEnabled,
+            BigDecimal monthlyPrice, Boolean active
     ) {
     }
 }

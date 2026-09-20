@@ -4,6 +4,7 @@ import com.animalin.common.api.PageResponse;
 import com.animalin.dto.AppDtos;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -32,8 +33,9 @@ public class PetController {
             @RequestParam(required = false) String q,
             @RequestParam(required = false) String species,
             @RequestParam(required = false) String status,
+            @RequestParam(required = false) Long ownerId,
             Pageable pageable) {
-        return petService.search(q, species, status, pageable);
+        return petService.search(q, species, status, ownerId, pageable);
     }
 
     @GetMapping("/mine")
@@ -60,6 +62,11 @@ public class PetController {
     @PutMapping("/{id}")
     public AppDtos.PetResponse update(@PathVariable Long id, @RequestBody AppDtos.PetRequest request) {
         return petService.update(id, request);
+    }
+
+    @DeleteMapping("/{id}")
+    public void delete(@PathVariable Long id) {
+        petService.delete(id);
     }
 
     @PostMapping("/{id}/photo")

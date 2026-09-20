@@ -24,4 +24,12 @@ public interface TenantMembershipRepository extends JpaRepository<TenantMembersh
             where m.user.id = :userId and m.status = 'ACTIVE'
             """)
     List<TenantMembership> findActiveByUserId(Long userId);
+    @Query("""
+            select m from TenantMembership m
+            join fetch m.user
+            join fetch m.role
+            where m.tenant.id = :tenantId
+            order by m.id desc
+            """)
+    List<TenantMembership> findByTenantId(Long tenantId);
 }

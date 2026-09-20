@@ -24,6 +24,17 @@ class _AnimalinAppState extends State<AnimalinApp> {
     });
   }
 
+  ThemeMode _themeMode(String? theme) {
+    switch (theme) {
+      case 'light':
+        return ThemeMode.light;
+      case 'dark':
+        return ThemeMode.dark;
+      default:
+        return ThemeMode.system;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     if (!ready) {
@@ -38,7 +49,7 @@ class _AnimalinAppState extends State<AnimalinApp> {
           locale: Locale(I18n.instance.locale),
           theme: AnimalinTheme.light,
           darkTheme: AnimalinTheme.dark,
-          themeMode: ThemeMode.system,
+          themeMode: _themeMode(auth.user?['theme'] as String?),
           home: auth.isLoggedIn ? ShellScreen(auth: auth) : LoginScreen(auth: auth),
         );
       },

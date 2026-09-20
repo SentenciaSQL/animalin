@@ -134,3 +134,20 @@ Archivos:
 `auth`, `users`, `tenants`, `plans`, `branches`, `owners`, `pets`, `appointments`, `medical`, `documents`, `messaging`, `notifications`, `reports`, `admin`, `audit`, `storage`.
 
 Los archivos clínicos se guardan fuera de PostgreSQL (disco local en desarrollo; listo para S3/Cloudinary). Ruta lógica: `/tenants/{tenantId}/pets/{petId}/documents/`.
+
+## Estado de las fases (MVP)
+
+Cubierto en esta base:
+
+1. Arquitectura, multi-tenant, autenticación JWT + refresh, roles/permisos.
+2. Veterinarias, sucursales, usuarios, propietarios, mascotas (CRUD + soft delete).
+3. Agenda (día/semana/mes), citas, disponibilidad y reprogramación del propietario.
+4. Expediente, consultas, vacunas, tratamientos, recetas PDF, laboratorios, procedimientos y cirugías.
+5. Documentos, notificaciones, recordatorios de vacunas, mensajería.
+6. App Flutter del propietario (branding por clínica, tema, reset de contraseña, PDF).
+7. Reportes CSV/Excel (sujetos al plan).
+8. Planes y suscripciones, límites de plan, branding dinámico, auditoría clínica y de plataforma.
+
+Aún preparado, no obligatorio para el MVP:
+
+- Pasarela de pago, S3/Cloudinary en producción, FCM real, verificación de email, drag & drop del calendario, reportes PDF, inventario/POS/facturación.

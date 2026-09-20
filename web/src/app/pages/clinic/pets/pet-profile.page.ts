@@ -152,7 +152,7 @@ import { ToastService } from '../../../core/services/toast.service';
         </div>
       }
 
-      @if (tab === 'labs') {
+            @if (tab === 'labs') {
         <div class="mt-4 space-y-2">
           @if (canWrite) {
             <form class="card grid gap-2 sm:grid-cols-3" (ngSubmit)="saveLab()">
@@ -166,6 +166,44 @@ import { ToastService } from '../../../core/services/toast.service';
               <p class="font-medium">{{ l.name }}</p>
               <p class="text-sm text-slate-500">{{ l.labName }} · {{ l.collectedAt | date }} · {{ l.status }}</p>
               <p class="text-sm">{{ l.resultSummary }}</p>
+            </div>
+          }
+        </div>
+      }
+
+      @if (tab === 'procedures') {
+        <div class="mt-4 space-y-2">
+          @if (canWrite) {
+            <form class="card grid gap-2 sm:grid-cols-3" (ngSubmit)="saveProcedure()">
+              <input class="input" [(ngModel)]="procedure.name" name="pname" required [placeholder]="'pets.tabs.procedures' | translate" />
+              <input class="input" [(ngModel)]="procedure.notes" name="pnotes" [placeholder]="'consultations.plan' | translate" />
+              <button class="btn-primary">{{ 'common.create' | translate }}</button>
+            </form>
+          }
+          @for (item of procedures(); track item.id) {
+            <div class="card">
+              <p class="font-medium">{{ item.name }}</p>
+              <p class="text-sm text-slate-500">{{ item.performedAt | date:'short' }} · {{ item.veterinarianName }}</p>
+              <p class="text-sm">{{ item.notes }}</p>
+            </div>
+          }
+        </div>
+      }
+
+      @if (tab === 'surgeries') {
+        <div class="mt-4 space-y-2">
+          @if (canWrite) {
+            <form class="card grid gap-2 sm:grid-cols-3" (ngSubmit)="saveSurgery()">
+              <input class="input" [(ngModel)]="surgery.name" name="sname" required [placeholder]="'pets.tabs.surgeries' | translate" />
+              <input class="input" [(ngModel)]="surgery.anesthesia" name="sanes" placeholder="Anestesia" />
+              <button class="btn-primary">{{ 'common.create' | translate }}</button>
+            </form>
+          }
+          @for (item of surgeries(); track item.id) {
+            <div class="card">
+              <p class="font-medium">{{ item.name }}</p>
+              <p class="text-sm text-slate-500">{{ item.performedAt | date:'short' }} · {{ item.anesthesia }}</p>
+              <p class="text-sm">{{ item.notes }}</p>
             </div>
           }
         </div>
@@ -230,6 +268,8 @@ export class PetProfilePage implements OnInit {
   treatments = signal<any[]>([]);
   prescriptions = signal<any[]>([]);
   labs = signal<any[]>([]);
+  procedures = signal<any[]>([]);
+  surgeries = signal<any[]>([]);
   documents = signal<any[]>([]);
   appointments = signal<Appointment[]>([]);
   weights = signal<any[]>([]);
@@ -238,6 +278,8 @@ export class PetProfilePage implements OnInit {
   treatment = { name: '', startDate: '' };
   rx = { medicationName: '', dose: '' };
   lab = { name: '', resultSummary: '' };
+  procedure = { name: '', notes: '' };
+  surgery = { name: '', anesthesia: '' };
   weightKg: number | null = null;
   tabs = [
     { id: 'summary', label: 'pets.tabs.summary' },
@@ -247,6 +289,8 @@ export class PetProfilePage implements OnInit {
     { id: 'treatments', label: 'pets.tabs.treatments' },
     { id: 'prescriptions', label: 'pets.tabs.prescriptions' },
     { id: 'labs', label: 'pets.tabs.labs' },
+    { id: 'procedures', label: 'pets.tabs.procedures' },
+    { id: 'surgeries', label: 'pets.tabs.surgeries' },
     { id: 'documents', label: 'pets.tabs.documents' },
     { id: 'appointments', label: 'pets.tabs.appointments' },
     { id: 'weight', label: 'pets.tabs.weight' }
@@ -272,6 +316,8 @@ export class PetProfilePage implements OnInit {
     if (tab === 'treatments') this.api.get<any[]>(`/pets/${id}/treatments`).subscribe(v => this.treatments.set(v));
     if (tab === 'prescriptions') this.api.get<any[]>(`/pets/${id}/prescriptions`).subscribe(v => this.prescriptions.set(v));
     if (tab === 'labs') this.api.get<any[]>(`/pets/${id}/labs`).subscribe(v => this.labs.set(v));
+    if (tab === 'procedures') this.api.get<any[]>(`/pets/${id}/procedures`).subscribe(v => this.procedures.set(v));
+    if (tab === 'surgeries') this.api.get<any[]>(`/pets/${id}/surgeries`).subscribe(v => this.surgeries.set(v));
     if (tab === 'documents') this.api.get<any[]>(`/pets/${id}/documents`).subscribe(v => this.documents.set(v));
     if (tab === 'appointments') this.api.get<Appointment[]>(`/appointments/pet/${id}`).subscribe(v => this.appointments.set(v));
     if (tab === 'weight') this.api.get<any[]>(`/pets/${id}/weights`).subscribe(v => this.weights.set(v));
@@ -329,6 +375,20 @@ export class PetProfilePage implements OnInit {
   saveLab() {
     this.api.post('/labs', { petId: this.petId(), name: this.lab.name, resultSummary: this.lab.resultSummary }).subscribe({
       next: () => { this.toast.show('common.saved'); this.lab = { name: '', resultSummary: '' }; this.select('labs'); },
+      error: () => this.toast.show('common.error', true)
+    });
+  }
+
+  saveProcedure() {
+    this.api.post('/procedures', { petId: this.petId(), name: this.procedure.name, notes: this.procedure.notes }).subscribe({
+      next: () => { this.toast.show('common.saved'); this.procedure = { name: '', notes: '' }; this.select('procedures'); },
+      error: () => this.toast.show('common.error', true)
+    });
+  }
+
+  saveSurgery() {
+    this.api.post('/surgeries', { petId: this.petId(), name: this.surgery.name, anesthesia: this.surgery.anesthesia }).subscribe({
+      next: () => { this.toast.show('common.saved'); this.surgery = { name: '', anesthesia: '' }; this.select('surgeries'); },
       error: () => this.toast.show('common.error', true)
     });
   }

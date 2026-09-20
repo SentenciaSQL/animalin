@@ -73,6 +73,7 @@
     "plans": "Plans",
     "subscriptions": "Subscriptions",
     "users": "Users",
+    "audit": "Audit",
     "profile": "Profile",
     "logout": "Sign out",
     "notifications": "Notifications"
@@ -126,7 +127,12 @@
     "activate": "Activate",
     "suspend": "Suspend",
     "plansSubtitle": "Platform plans and limits",
-    "subscriptions": "Subscriptions"
+    "subscriptions": "Subscriptions",
+    "usersSubtitle": "Global platform users",
+    "auditSubtitle": "Platform audit trail",
+    "clinicAuditSubtitle": "Change history for this clinic",
+    "entity": "Entity",
+    "when": "When"
   },
   "owners": {
     "title": "Owners",
@@ -163,6 +169,8 @@
       "treatments": "Treatments",
       "prescriptions": "Prescriptions",
       "labs": "Labs",
+      "procedures": "Procedures",
+      "surgeries": "Surgeries",
       "documents": "Documents",
       "appointments": "Appointments",
       "weight": "Weight"
@@ -239,7 +247,7 @@
     "notifyEmail": "Email notifications",
     "notifyPush": "Push notifications"
   },
-  "team": { "title": "Veterinary team", "new": "Add veterinarian", "specialty": "Specialty" },
+  "team": { "title": "Veterinary team", "new": "Add veterinarian", "specialty": "Specialty", "staff": "Staff" },
   "branches": { "title": "Branches", "new": "New branch" },
   "services": { "title": "Services", "new": "New service", "duration": "Duration (min)", "price": "Price" },
   "profile": { "title": "Your profile", "password": "Change password", "current": "Current password", "next": "New password" }

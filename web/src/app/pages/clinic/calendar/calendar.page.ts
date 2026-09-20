@@ -32,6 +32,31 @@ import { EmptyStateComponent } from '../../../shared/ui/empty-state.component';
       </div>
     </div>
     <p class="mt-3 text-sm font-medium text-slate-500">{{ rangeLabel() }}</p>
+    @if (view() !== 'month') {
+      <div class="card mt-4 overflow-x-auto p-0">
+        <div class="grid min-w-[720px]" [style.gridTemplateColumns]="'4.5rem repeat(' + dayColumns().length + ', minmax(0,1fr))'">
+          <div class="border-b border-slate-100 p-2 text-xs text-slate-400 dark:border-white/5"></div>
+          @for (day of dayColumns(); track day.toISOString()) {
+            <div class="border-b border-l border-slate-100 p-2 text-center text-xs font-semibold dark:border-white/5">
+              {{ day | date:'EEE d' }}
+            </div>
+          }
+          @for (hour of hours; track hour) {
+            <div class="border-t border-slate-100 px-2 py-3 text-xs text-slate-400 dark:border-white/5">{{ hour }}:00</div>
+            @for (day of dayColumns(); track day.toISOString() + hour) {
+              <div class="relative min-h-14 border-l border-t border-slate-100 dark:border-white/5">
+                @for (a of slotsAt(day, hour); track a.id) {
+                  <button type="button" class="absolute inset-x-1 top-1 rounded-lg bg-brand-600 px-2 py-1 text-left text-[11px] text-white"
+                          (click)="selected.set(a)">
+                    {{ a.petName }}
+                  </button>
+                }
+              </div>
+            }
+          }
+        </div>
+      </div>
+    }
     <div class="mt-4 space-y-2">
       @if (visible().length === 0) { <empty-state [title]="'calendar.empty' | translate" /> }
       @for (a of visible(); track a.id) {
@@ -103,6 +128,8 @@ export class CalendarPage implements OnInit {
   open = false;
   view = signal<'day' | 'week' | 'month'>('week');
   anchor = signal(new Date());
+  selected = signal<Appointment | null>(null);
+  hours = [8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19];
   form = this.fb.group({
     petId: ['', Validators.required],
     veterinarianId: ['', Validators.required],
@@ -125,6 +152,23 @@ export class CalendarPage implements OnInit {
     const to = new Date(this.rangeEnd().getTime() - 1);
     return `${from.toLocaleDateString()} – ${to.toLocaleDateString()}`;
   });
+
+  dayColumns = computed(() => {
+    const start = this.rangeStart();
+    const days = this.view() === 'day' ? 1 : 7;
+    return Array.from({ length: days }, (_, i) => {
+      const d = new Date(start);
+      d.setDate(start.getDate() + i);
+      return d;
+    });
+  });
+
+  slotsAt(day: Date, hour: number) {
+    return this.visible().filter(a => {
+      const start = new Date(a.startAt);
+      return start.getDate() === day.getDate() && start.getMonth() === day.getMonth() && start.getHours() === hour;
+    });
+  }
 
   ngOnInit() {
     this.reload();

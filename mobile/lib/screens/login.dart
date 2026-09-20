@@ -13,15 +13,26 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final email = TextEditingController();
   final password = TextEditingController();
+  final token = TextEditingController();
+  final firstName = TextEditingController();
+  final lastName = TextEditingController();
   bool loading = false;
   String? error;
   bool register = false;
   bool forgot = false;
   bool sent = false;
-  final firstName = TextEditingController();
-  final lastName = TextEditingController();
 
   I18n get i => I18n.instance;
+
+  @override
+  void dispose() {
+    email.dispose();
+    password.dispose();
+    token.dispose();
+    firstName.dispose();
+    lastName.dispose();
+    super.dispose();
+  }
 
   Future<void> submit() async {
     setState(() {
@@ -30,8 +41,18 @@ class _LoginScreenState extends State<LoginScreen> {
     });
     try {
       if (forgot) {
-        await widget.auth.forgot(email.text.trim());
-        setState(() => sent = true);
+        if (token.text.trim().isNotEmpty) {
+          await widget.auth.resetPassword(token.text.trim(), password.text);
+          setState(() {
+            forgot = false;
+            sent = false;
+            token.clear();
+            password.clear();
+          });
+        } else {
+          await widget.auth.forgot(email.text.trim());
+          setState(() => sent = true);
+        }
       } else if (register) {
         await widget.auth.register({
           'firstName': firstName.text,
@@ -50,6 +71,13 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
+  String get _submitLabel {
+    if (forgot && token.text.trim().isNotEmpty) return i.t('resetSubmit');
+    if (forgot) return i.t('forgot');
+    if (register) return i.t('register');
+    return i.t('login');
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -61,7 +89,7 @@ class _LoginScreenState extends State<LoginScreen> {
             CircleAvatar(
               radius: 28,
               backgroundColor: const Color(0xFF0F766E),
-              child: Text('A', style: Theme.of(context).textTheme.titleLarge?.copyWith(color: Colors.white)),
+              child: Icon(Icons.pets, color: Theme.of(context).colorScheme.onPrimary),
             ),
             const SizedBox(height: 16),
             Text(i.t('appName'), style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w700)),
@@ -78,18 +106,25 @@ class _LoginScreenState extends State<LoginScreen> {
               const SizedBox(height: 12),
               TextField(controller: password, obscureText: true, decoration: InputDecoration(labelText: i.t('password'))),
             ],
+            if (forgot) ...[
+              const SizedBox(height: 12),
+              TextField(controller: token, decoration: InputDecoration(labelText: i.t('resetToken')), onChanged: (_) => setState(() {})),
+              const SizedBox(height: 12),
+              TextField(controller: password, obscureText: true, decoration: InputDecoration(labelText: i.t('password'))),
+            ],
             if (error != null) Padding(padding: const EdgeInsets.only(top: 12), child: Text(error!, style: const TextStyle(color: Colors.red))),
             if (sent) Padding(padding: const EdgeInsets.only(top: 12), child: Text(i.t('forgotSent'))),
             const SizedBox(height: 20),
             FilledButton(
               onPressed: loading ? null : submit,
-              child: Text(forgot ? i.t('forgot') : (register ? i.t('register') : i.t('login'))),
+              child: Text(_submitLabel),
             ),
             TextButton(
               onPressed: () => setState(() {
                 forgot = !forgot;
                 register = false;
                 sent = false;
+                error = null;
               }),
               child: Text(forgot ? i.t('login') : i.t('forgot')),
             ),

@@ -79,6 +79,18 @@ class TenantIsolationTest {
     }
 
     @Test
+    void tenantStaffCanAccessOwnAuditAndEmployees() throws Exception {
+        String token = login(emailA);
+        mockMvc.perform(get("/api/v1/audit")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content").isArray());
+        mockMvc.perform(get("/api/v1/employees")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk());
+    }
+
+    @Test
     void tenantACannotReadPetFromTenantB() throws Exception {
         String token = login(emailA);
         mockMvc.perform(get("/api/v1/pets/" + petBId)

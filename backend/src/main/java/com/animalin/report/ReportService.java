@@ -6,6 +6,7 @@ import com.animalin.medical.ConsultationRepository;
 import com.animalin.medical.VaccinationRepository;
 import com.animalin.owner.OwnerRepository;
 import com.animalin.pet.PetRepository;
+import com.animalin.plan.PlanLimitService;
 import com.animalin.security.AccessGuard;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
@@ -35,21 +36,30 @@ public class ReportService {
     private final ConsultationRepository consultationRepository;
     private final VaccinationRepository vaccinationRepository;
     private final AccessGuard accessGuard;
+    private final PlanLimitService planLimitService;
 
     public ReportService(AppointmentRepository appointmentRepository, OwnerRepository ownerRepository, PetRepository petRepository,
-                         ConsultationRepository consultationRepository, VaccinationRepository vaccinationRepository, AccessGuard accessGuard) {
+                         ConsultationRepository consultationRepository, VaccinationRepository vaccinationRepository, AccessGuard accessGuard,
+                         PlanLimitService planLimitService) {
         this.appointmentRepository = appointmentRepository;
         this.ownerRepository = ownerRepository;
         this.petRepository = petRepository;
         this.consultationRepository = consultationRepository;
         this.vaccinationRepository = vaccinationRepository;
         this.accessGuard = accessGuard;
+        this.planLimitService = planLimitService;
+    }
+
+    private Long requireReportsTenant() {
+        accessGuard.requirePermission("REPORT_VIEW");
+        Long tenantId = accessGuard.requireStaffTenant();
+        planLimitService.assertReportsEnabled(tenantId);
+        return tenantId;
     }
 
     @Transactional(readOnly = true)
     public byte[] appointmentsExcel(Instant from, Instant to, Long veterinarianId, Long branchId, String status) {
-        accessGuard.requirePermission("REPORT_VIEW");
-        Long tenantId = accessGuard.requireStaffTenant();
+        Long tenantId = requireReportsTenant();
         List<Appointment> appointments = appointmentRepository.calendar(tenantId, from, to, veterinarianId, branchId, status);
         try (XSSFWorkbook workbook = new XSSFWorkbook(); ByteArrayOutputStream out = new ByteArrayOutputStream()) {
             Sheet sheet = workbook.createSheet("Citas");
@@ -75,8 +85,7 @@ public class ReportService {
 
     @Transactional(readOnly = true)
     public byte[] ownersCsv() {
-        accessGuard.requirePermission("REPORT_VIEW");
-        Long tenantId = accessGuard.requireStaffTenant();
+        Long tenantId = requireReportsTenant();
         String body = ownerRepository.search(tenantId, null, null, org.springframework.data.domain.Pageable.unpaged())
                 .getContent().stream()
                 .map(o -> String.join(",", csv(o.fullName()), csv(o.getEmail()), csv(o.getPhone()), csv(o.getStatus())))
@@ -86,9 +95,8 @@ public class ReportService {
 
     @Transactional(readOnly = true)
     public byte[] petsCsv() {
-        accessGuard.requirePermission("REPORT_VIEW");
-        Long tenantId = accessGuard.requireStaffTenant();
-        String body = petRepository.search(tenantId, null, null, null, org.springframework.data.domain.Pageable.unpaged())
+        Long tenantId = requireReportsTenant();
+        String body = petRepository.search(tenantId, null, null, null, null, org.springframework.data.domain.Pageable.unpaged())
                 .getContent().stream()
                 .map(p -> String.join(",", csv(p.getName()), csv(p.getSpecies()), csv(p.getBreed()), csv(p.getOwner().fullName())))
                 .collect(Collectors.joining("\n"));
@@ -97,8 +105,7 @@ public class ReportService {
 
     @Transactional(readOnly = true)
     public byte[] consultationsCsv(Instant from, Instant to) {
-        accessGuard.requirePermission("REPORT_VIEW");
-        Long tenantId = accessGuard.requireStaffTenant();
+        Long tenantId = requireReportsTenant();
         String body = consultationRepository.findByTenantIdAndConsultedAtBetweenOrderByConsultedAtDesc(tenantId, from, to)
                 .stream()
                 .map(c -> String.join(",",
@@ -114,8 +121,7 @@ public class ReportService {
 
     @Transactional(readOnly = true)
     public byte[] vaccinationsCsv() {
-        accessGuard.requirePermission("REPORT_VIEW");
-        Long tenantId = accessGuard.requireStaffTenant();
+        Long tenantId = requireReportsTenant();
         String body = vaccinationRepository.findByTenantIdOrderByAppliedAtDesc(tenantId).stream()
                 .map(v -> String.join(",",
                         csv(v.getPet().getName()),

@@ -51,5 +51,14 @@
   "review": "Revisar solicitud",
   "unread": "sin leer",
   "invalid": "Credenciales inválidas",
-  "contact": "Contacto"
+  "contact": "Contacto",
+  "notifications": "Notificaciones",
+  "resetToken": "Código de restablecimiento",
+  "resetSubmit": "Guardar nueva contraseña",
+  "pdfReady": "PDF listo",
+  "theme": "Tema",
+  "themeLight": "Claro",
+  "themeDark": "Oscuro",
+  "themeSystem": "Sistema",
+  "reschedule": "Reprogramar"
 }

@@ -16,7 +16,7 @@ import { RouterLink } from '@angular/router';
         <h1 class="font-display text-2xl font-semibold">{{ 'owners.title' | translate }}</h1>
         <p class="text-sm text-slate-500">{{ 'owners.subtitle' | translate }}</p>
       </div>
-      <button type="button" class="btn-primary" (click)="open = true">{{ 'owners.new' | translate }}</button>
+      <button type="button" class="btn-primary" (click)="startCreate()">{{ 'owners.new' | translate }}</button>
     </div>
     <div class="card mt-6 overflow-hidden p-0">
       <div class="border-b border-slate-200 p-4 dark:border-white/10">
@@ -32,14 +32,21 @@ import { RouterLink } from '@angular/router';
                 <th class="px-4 py-3">{{ 'owners.name' | translate }}</th>
                 <th class="px-4 py-3">{{ 'owners.email' | translate }}</th>
                 <th class="px-4 py-3">{{ 'owners.phone' | translate }}</th>
+                <th class="px-4 py-3">{{ 'common.actions' | translate }}</th>
               </tr>
             </thead>
             <tbody>
               @for (o of rows(); track o.id) {
                 <tr class="border-t border-slate-100 hover:bg-slate-50 dark:border-white/5 dark:hover:bg-white/5">
-                  <td class="px-4 py-3 font-medium"><a [routerLink]="['/pets']" class="hover:text-brand-700">{{ o.firstName }} {{ o.lastName }}</a></td>
+                  <td class="px-4 py-3 font-medium">
+                    <a [routerLink]="['/pets']" [queryParams]="{ owner: o.id }" class="hover:text-brand-700">{{ o.firstName }} {{ o.lastName }}</a>
+                  </td>
                   <td class="px-4 py-3">{{ o.email }}</td>
                   <td class="px-4 py-3">{{ o.phone }}</td>
+                  <td class="px-4 py-3">
+                    <button class="btn-secondary text-xs" (click)="startEdit(o)">{{ 'common.edit' | translate }}</button>
+                    <button class="btn-secondary text-xs ml-2" (click)="remove(o)">{{ 'common.delete' | translate }}</button>
+                  </td>
                 </tr>
               }
             </tbody>
@@ -50,12 +57,12 @@ import { RouterLink } from '@angular/router';
     @if (open) {
       <div class="fixed inset-0 z-50 grid place-items-center bg-black/40 p-4" (click)="open=false">
         <form class="card w-full max-w-lg space-y-3" (click)="$event.stopPropagation()" [formGroup]="form" (ngSubmit)="save()">
-          <h2 class="font-display text-lg font-semibold">{{ 'owners.new' | translate }}</h2>
+          <h2 class="font-display text-lg font-semibold">{{ (editingId ? 'common.edit' : 'owners.new') | translate }}</h2>
           <div class="grid gap-3 sm:grid-cols-2">
             <input class="input" formControlName="firstName" [placeholder]="'owners.firstName' | translate" />
             <input class="input" formControlName="lastName" [placeholder]="'owners.lastName' | translate" />
           </div>
-          <input class="input" formControlName="email" placeholder="Email" />
+          <input class="input" formControlName="email" [placeholder]="'owners.email' | translate" />
           <input class="input" formControlName="phone" [placeholder]="'owners.phone' | translate" />
           <div class="flex justify-end gap-2">
             <button type="button" class="btn-secondary" (click)="open=false">{{ 'common.cancel' | translate }}</button>
@@ -73,6 +80,7 @@ export class OwnersPage implements OnInit {
   rows = signal<any[]>([]);
   q = signal('');
   open = false;
+  editingId: number | null = null;
   form = this.fb.group({
     firstName: ['', Validators.required],
     lastName: ['', Validators.required],
@@ -86,8 +94,34 @@ export class OwnersPage implements OnInit {
     this.api.get<{ content: any[] }>('/owners', { q: this.q(), page: 0, size: 50 }).subscribe(r => this.rows.set(r.content || []));
   }
 
+  startCreate() {
+    this.editingId = null;
+    this.form.reset();
+    this.open = true;
+  }
+
+  startEdit(owner: any) {
+    this.editingId = owner.id;
+    this.form.patchValue(owner);
+    this.open = true;
+  }
+
+  remove(owner: any) {
+    if (!confirm(owner.fullName || owner.firstName)) {
+      return;
+    }
+    this.api.delete(`/owners/${owner.id}`).subscribe({
+      next: () => { this.toast.show('common.saved'); this.load(); },
+      error: () => this.toast.show('common.error', true)
+    });
+  }
+
   save() {
-    this.api.post('/owners', this.form.value).subscribe({
+    const body = this.form.value;
+    const req = this.editingId
+      ? this.api.put(`/owners/${this.editingId}`, body)
+      : this.api.post('/owners', body);
+    req.subscribe({
       next: () => { this.toast.show('common.saved'); this.open = false; this.form.reset(); this.load(); },
       error: () => this.toast.show('common.error', true)
     });

@@ -129,4 +129,16 @@ public class AuditService {
         }
         return repository.search(null, pageable);
     }
+
+    @Transactional(readOnly = true)
+    public Page<AuditEntry> listEntries(Long tenantId, Pageable pageable) {
+        return list(tenantId, pageable).map(a -> new AuditEntry(
+                a.getId(), a.getTenantId(), a.getUserId(), a.getUsername(), a.getAction(),
+                a.getEntityType(), a.getEntityId(), a.getDetails(), a.getOldValue(), a.getNewValue(), a.getCreatedAt()
+        ));
+    }
+
+    public record AuditEntry(Long id, Long tenantId, Long userId, String username, String action, String entityType,
+                             Long entityId, String details, String oldValue, String newValue, Instant createdAt) {
+    }
 }

@@ -90,6 +90,20 @@ public class NotificationService {
                 log.info("Would send FCM to {} ({})", token.getToken(), title));
     }
 
+    public void sendPlainEmail(String to, String subject, String body) {
+        mailSender.ifPresentOrElse(sender -> {
+            try {
+                SimpleMailMessage message = new SimpleMailMessage();
+                message.setTo(to);
+                message.setSubject(subject);
+                message.setText(body);
+                sender.send(message);
+            } catch (Exception ex) {
+                log.info("Email not delivered to {} (integration prepared): {}", to, ex.getMessage());
+            }
+        }, () -> log.info("Email prepared for {} [{}]", to, subject));
+    }
+
     private void sendEmailPrepared(Long userId, String title, String body) {
         mailSender.ifPresent(sender -> userRepository.findById(userId).ifPresent(user -> {
             try {

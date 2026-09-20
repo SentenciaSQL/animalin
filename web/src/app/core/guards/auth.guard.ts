@@ -31,3 +31,9 @@ export const staffGuard: CanActivateFn = () => {
   const router = inject(Router);
   return auth.isStaff() || auth.isSuperAdmin() || router.createUrlTree([auth.homePath()]);
 };
+
+export const medicalWriteGuard: CanActivateFn = () => {
+  const auth = inject(AuthService);
+  const router = inject(Router);
+  return auth.hasPermission('MEDICAL_RECORD_WRITE') || auth.isSuperAdmin() || router.createUrlTree([auth.homePath()]);
+};

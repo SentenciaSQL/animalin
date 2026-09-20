@@ -9,6 +9,7 @@ import com.animalin.notification.NotificationService;
 import com.animalin.pet.Pet;
 import com.animalin.pet.PetWeightLog;
 import com.animalin.pet.PetWeightLogRepository;
+import com.animalin.plan.PlanLimitService;
 import com.animalin.security.AccessGuard;
 import com.animalin.security.TenantContext;
 import com.animalin.veterinarian.Veterinarian;
@@ -38,8 +39,9 @@ public class MedicalRecordService {
     private final AccessGuard accessGuard;
     private final AuditService auditService;
     private final NotificationService notificationService;
+    private final PlanLimitService planLimitService;
 
-    public MedicalRecordService(ConsultationRepository consultationRepository, VitalSignRepository vitalSignRepository, TreatmentRepository treatmentRepository, PrescriptionRepository prescriptionRepository, VaccinationRepository vaccinationRepository, ProcedureRepository procedureRepository, SurgeryRepository surgeryRepository, LaboratoryResultRepository laboratoryResultRepository, AppointmentRepository appointmentRepository, VeterinarianRepository veterinarianRepository, PetWeightLogRepository weightLogRepository, AccessGuard accessGuard, AuditService auditService, NotificationService notificationService) {
+    public MedicalRecordService(ConsultationRepository consultationRepository, VitalSignRepository vitalSignRepository, TreatmentRepository treatmentRepository, PrescriptionRepository prescriptionRepository, VaccinationRepository vaccinationRepository, ProcedureRepository procedureRepository, SurgeryRepository surgeryRepository, LaboratoryResultRepository laboratoryResultRepository, AppointmentRepository appointmentRepository, VeterinarianRepository veterinarianRepository, PetWeightLogRepository weightLogRepository, AccessGuard accessGuard, AuditService auditService, NotificationService notificationService, PlanLimitService planLimitService) {
         this.consultationRepository = consultationRepository;
         this.vitalSignRepository = vitalSignRepository;
         this.treatmentRepository = treatmentRepository;
@@ -54,6 +56,7 @@ public class MedicalRecordService {
         this.accessGuard = accessGuard;
         this.auditService = auditService;
         this.notificationService = notificationService;
+        this.planLimitService = planLimitService;
     }
 
 
@@ -229,6 +232,7 @@ public class MedicalRecordService {
     public AppDtos.LaboratoryResponse createLaboratory(AppDtos.LaboratoryRequest request) {
         accessGuard.requirePermission("MEDICAL_RECORD_WRITE");
         Pet pet = accessGuard.requirePet(request.petId());
+        planLimitService.assertLaboratoryEnabled(pet.getTenantId());
         LaboratoryResult lab = new LaboratoryResult();
         lab.setTenantId(pet.getTenantId());
         lab.setPet(pet);
@@ -250,6 +254,78 @@ public class MedicalRecordService {
                     lab.getName(), lab.getName(), "LAB", lab.getId());
         }
         return toLab(lab);
+    }
+
+    @Transactional
+    public AppDtos.TreatmentResponse updateTreatment(Long id, AppDtos.TreatmentRequest request) {
+        accessGuard.requirePermission("MEDICAL_RECORD_WRITE");
+        Treatment treatment = treatmentRepository.findByIdAndTenantId(id, accessGuard.requireStaffTenant())
+                .orElseThrow(() -> ApiException.notFound("Tratamiento no encontrado"));
+        if (request.name() != null) treatment.setName(request.name());
+        if (request.description() != null) treatment.setDescription(request.description());
+        if (request.startDate() != null) treatment.setStartDate(request.startDate());
+        if (request.endDate() != null) treatment.setEndDate(request.endDate());
+        if (request.status() != null) treatment.setStatus(request.status());
+        if (request.notes() != null) treatment.setNotes(request.notes());
+        auditService.record("UPDATE", "TREATMENT", treatment.getId(), treatment.getStatus());
+        return toTreatment(treatment);
+    }
+
+    @Transactional
+    public AppDtos.ProcedureResponse createProcedure(AppDtos.ProcedureRequest request) {
+        accessGuard.requirePermission("MEDICAL_RECORD_WRITE");
+        Pet pet = accessGuard.requirePet(request.petId());
+        Procedure procedure = new Procedure();
+        procedure.setTenantId(pet.getTenantId());
+        procedure.setPet(pet);
+        procedure.setConsultationId(request.consultationId());
+        procedure.setName(request.name());
+        procedure.setPerformedAt(request.performedAt() == null ? Instant.now() : request.performedAt());
+        procedure.setNotes(request.notes());
+        if (request.veterinarianId() != null) {
+            procedure.setVeterinarian(veterinarianRepository.findByIdAndTenantId(request.veterinarianId(), pet.getTenantId())
+                    .orElseThrow(() -> ApiException.notFound("Veterinario no encontrado")));
+        }
+        procedureRepository.save(procedure);
+        auditService.record("CREATE", "PROCEDURE", procedure.getId(), procedure.getName());
+        return toProcedure(procedure);
+    }
+
+    @Transactional
+    public AppDtos.SurgeryResponse createSurgery(AppDtos.SurgeryRequest request) {
+        accessGuard.requirePermission("MEDICAL_RECORD_WRITE");
+        Pet pet = accessGuard.requirePet(request.petId());
+        Surgery surgery = new Surgery();
+        surgery.setTenantId(pet.getTenantId());
+        surgery.setPet(pet);
+        surgery.setName(request.name());
+        surgery.setPerformedAt(request.performedAt() == null ? Instant.now() : request.performedAt());
+        surgery.setAnesthesia(request.anesthesia());
+        surgery.setNotes(request.notes());
+        surgery.setOutcome(request.outcome());
+        if (request.veterinarianId() != null) {
+            surgery.setVeterinarian(veterinarianRepository.findByIdAndTenantId(request.veterinarianId(), pet.getTenantId())
+                    .orElseThrow(() -> ApiException.notFound("Veterinario no encontrado")));
+        }
+        surgeryRepository.save(surgery);
+        auditService.record("CREATE", "SURGERY", surgery.getId(), surgery.getName());
+        return toSurgery(surgery);
+    }
+
+    @Transactional(readOnly = true)
+    public List<AppDtos.ProcedureResponse> procedures(Long petId) {
+        Pet pet = accessGuard.requirePet(petId);
+        denySensitiveIfReceptionist();
+        return procedureRepository.findByPetIdAndTenantIdOrderByPerformedAtDesc(pet.getId(), pet.getTenantId())
+                .stream().map(this::toProcedure).toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<AppDtos.SurgeryResponse> surgeries(Long petId) {
+        Pet pet = accessGuard.requirePet(petId);
+        denySensitiveIfReceptionist();
+        return surgeryRepository.findByPetIdAndTenantIdOrderByPerformedAtDesc(pet.getId(), pet.getTenantId())
+                .stream().map(this::toSurgery).toList();
     }
 
     @Transactional(readOnly = true)
@@ -421,5 +497,15 @@ public class MedicalRecordService {
                 l.getId(), l.getPet().getId(), l.getName(), l.getLabName(), l.getCollectedAt(),
                 l.getResultSummary(), l.getStatus(), vetName(l.getVeterinarian())
         );
+    }
+
+    private AppDtos.ProcedureResponse toProcedure(Procedure p) {
+        return new AppDtos.ProcedureResponse(p.getId(), p.getPet().getId(), p.getName(), p.getPerformedAt(),
+                p.getNotes(), vetName(p.getVeterinarian()));
+    }
+
+    private AppDtos.SurgeryResponse toSurgery(Surgery s) {
+        return new AppDtos.SurgeryResponse(s.getId(), s.getPet().getId(), s.getName(), s.getPerformedAt(),
+                s.getAnesthesia(), s.getNotes(), s.getOutcome(), vetName(s.getVeterinarian()));
     }
 }

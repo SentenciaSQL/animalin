@@ -1,7 +1,7 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
 import { ApiService } from '../../../core/services/api.service';
 import { AuthService } from '../../../core/services/auth.service';
@@ -72,6 +72,7 @@ import { Owner, PageResponse, Pet } from '../../../core/models';
 export class PetsPage implements OnInit {
   private api = inject(ApiService);
   private toast = inject(ToastService);
+  private route = inject(ActivatedRoute);
   auth = inject(AuthService);
   private fb = inject(FormBuilder);
   rows = signal<Pet[]>([]);
@@ -86,8 +87,15 @@ export class PetsPage implements OnInit {
   });
 
   ngOnInit() {
+    this.route.queryParamMap.subscribe(params => {
+      const ownerId = params.get('owner');
+      this.load(ownerId);
+    });
+  }
+
+  load(ownerId: string | null) {
     if (this.auth.isStaff()) {
-      this.api.get<PageResponse<Pet>>('/pets', { page: 0, size: 50 }).subscribe(r => this.rows.set(r.content || []));
+      this.api.get<PageResponse<Pet>>('/pets', { page: 0, size: 50, ownerId: ownerId || undefined }).subscribe(r => this.rows.set(r.content || []));
       this.api.get<PageResponse<Owner>>('/owners', { page: 0, size: 100 }).subscribe(r => this.owners.set(r.content || []));
     } else {
       this.api.get<Pet[]>('/pets/mine').subscribe(r => this.rows.set(r || []));
@@ -97,7 +105,7 @@ export class PetsPage implements OnInit {
   save() {
     const value = this.form.getRawValue();
     this.api.post('/pets', { ...value, ownerId: Number(value.ownerId) }).subscribe({
-      next: () => { this.toast.show('common.saved'); this.open = false; this.ngOnInit(); },
+      next: () => { this.toast.show('common.saved'); this.open = false; this.load(this.route.snapshot.queryParamMap.get('owner')); },
       error: () => this.toast.show('common.error', true)
     });
   }

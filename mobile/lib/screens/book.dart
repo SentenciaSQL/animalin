@@ -81,7 +81,12 @@ class _BookScreenState extends State<BookScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(i.t('book'))),
+      appBar: AppBar(
+        title: Text(i.t('book')),
+        leading: step > 0
+            ? IconButton(icon: const Icon(Icons.arrow_back), onPressed: () => setState(() => step -= 1))
+            : null,
+      ),
       body: Padding(
         padding: const EdgeInsets.all(20),
         child: Column(

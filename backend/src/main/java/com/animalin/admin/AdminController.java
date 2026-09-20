@@ -2,13 +2,11 @@ package com.animalin.admin;
 
 import com.animalin.plan.Plan;
 import com.animalin.tenant.Tenant;
-import com.animalin.user.User;
-import com.animalin.user.UserRepository;
-import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -22,11 +20,9 @@ import java.util.Map;
 public class AdminController {
 
     private final AdminService adminService;
-    private final UserRepository userRepository;
 
-    public AdminController(AdminService adminService, UserRepository userRepository) {
+    public AdminController(AdminService adminService) {
         this.adminService = adminService;
-        this.userRepository = userRepository;
     }
 
     @GetMapping("/metrics")
@@ -50,6 +46,16 @@ public class AdminController {
         return adminService.changeStatus(id, body.get("status"));
     }
 
+    @PutMapping("/tenants/{id}")
+    public Tenant updateTenant(@PathVariable Long id, @RequestBody AdminService.UpdateTenantRequest request) {
+        return adminService.updateTenant(id, request);
+    }
+
+    @PutMapping("/plans/{id}")
+    public Plan updatePlan(@PathVariable Long id, @RequestBody AdminService.UpdatePlanRequest request) {
+        return adminService.updatePlan(id, request);
+    }
+
     @GetMapping("/plans")
     public List<Plan> plans() {
         return adminService.plans();
@@ -61,7 +67,7 @@ public class AdminController {
     }
 
     @GetMapping("/users")
-    public List<User> users(Pageable pageable) {
-        return userRepository.findAll(pageable).getContent();
+    public List<Map<String, Object>> users() {
+        return adminService.users();
     }
 }

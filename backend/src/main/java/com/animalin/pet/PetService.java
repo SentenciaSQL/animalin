@@ -46,10 +46,10 @@ public class PetService {
     }
 
     @Transactional(readOnly = true)
-    public PageResponse<AppDtos.PetResponse> search(String q, String species, String status, Pageable pageable) {
+    public PageResponse<AppDtos.PetResponse> search(String q, String species, String status, Long ownerId, Pageable pageable) {
         Long tenantId = accessGuard.requireStaffTenant();
         accessGuard.requirePermission("PET_READ");
-        return PageResponse.of(petRepository.search(tenantId, emptyToNull(q), emptyToNull(species), emptyToNull(status), pageable)
+        return PageResponse.of(petRepository.search(tenantId, emptyToNull(q), emptyToNull(species), emptyToNull(status), ownerId, pageable)
                 .map(this::toDto));
     }
 
@@ -96,6 +96,14 @@ public class PetService {
         }
         auditService.record("UPDATE", "PET", pet.getId(), pet.getName());
         return toDto(pet);
+    }
+
+    @Transactional
+    public void delete(Long id) {
+        accessGuard.requirePermission("PET_UPDATE");
+        Pet pet = accessGuard.requirePet(id);
+        pet.softDelete();
+        auditService.record("DELETE", "PET", pet.getId(), pet.getName());
     }
 
     @Transactional

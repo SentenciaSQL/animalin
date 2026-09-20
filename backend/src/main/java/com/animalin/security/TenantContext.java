@@ -68,6 +68,12 @@ public final class TenantContext {
         return hasRole("SUPER_ADMIN");
     }
 
+    public static void requireSuperAdmin() {
+        if (!isSuperAdmin()) {
+            throw ApiException.forbidden("Requiere el rol SUPER_ADMIN");
+        }
+    }
+
     public static boolean isPetOwner() {
         return hasRole("PET_OWNER") && !hasRole("TENANT_ADMIN") && !hasRole("VETERINARIAN") && !hasRole("RECEPTIONIST");
     }

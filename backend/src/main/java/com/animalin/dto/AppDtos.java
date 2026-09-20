@@ -158,6 +158,22 @@ public final class AppDtos {
     public record DocumentResponse(Long id, String title, String category, Instant createdAt, Long fileId, String url) {
     }
 
+    public record ProcedureRequest(Long petId, Long veterinarianId, Long consultationId, String name,
+                                   Instant performedAt, String notes) {
+    }
+
+    public record ProcedureResponse(Long id, Long petId, String name, Instant performedAt, String notes,
+                                    String veterinarianName) {
+    }
+
+    public record SurgeryRequest(Long petId, Long veterinarianId, String name, Instant performedAt,
+                                 String anesthesia, String notes, String outcome) {
+    }
+
+    public record SurgeryResponse(Long id, Long petId, String name, Instant performedAt, String anesthesia,
+                                  String notes, String outcome, String veterinarianName) {
+    }
+
     public record SettingsResponse(
             String dateFormat,
             int defaultAppointmentMin,

@@ -34,6 +34,63 @@ class _AppointmentsScreenState extends State<AppointmentsScreen> {
     await _load();
   }
 
+  String _slotLabel(dynamic value) {
+    final raw = '$value';
+    final time = raw.contains('T') ? raw.split('T').last : raw;
+    return time.length >= 5 ? time.substring(0, 5) : raw;
+  }
+
+  Future<void> _reschedule(Map a) async {
+    final i = I18n.instance;
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now().add(const Duration(days: 1)),
+      firstDate: DateTime.now(),
+      lastDate: DateTime.now().add(const Duration(days: 90)),
+    );
+    if (picked == null || !mounted) return;
+    final day = '${picked.year.toString().padLeft(4, '0')}-${picked.month.toString().padLeft(2, '0')}-${picked.day.toString().padLeft(2, '0')}';
+    List slots = [];
+    try {
+      slots = await widget.auth.api.get('/appointments/availability', {
+        'veterinarianId': '${a['veterinarianId']}',
+        if (a['branchId'] != null) 'branchId': '${a['branchId']}',
+        if (a['serviceId'] != null) 'serviceId': '${a['serviceId']}',
+        'date': day,
+      }) as List? ?? [];
+    } catch (_) {
+      return;
+    }
+    if (!mounted) return;
+    final slot = await showModalBottomSheet<Map>(
+      context: context,
+      builder: (ctx) => SafeArea(
+        child: ListView(
+          children: [
+            ListTile(title: Text(i.t('slot'))),
+            if (slots.isEmpty) ListTile(title: Text(i.t('empty'))),
+            for (final s in slots)
+              ListTile(
+                title: Text(_slotLabel(s['startAt'])),
+                onTap: () => Navigator.pop(ctx, s as Map),
+              ),
+          ],
+        ),
+      ),
+    );
+    if (slot == null) return;
+    await widget.auth.api.put('/appointments/${a['id']}', {
+      'petId': a['petId'],
+      'veterinarianId': a['veterinarianId'],
+      'serviceId': a['serviceId'],
+      'branchId': a['branchId'],
+      'startAt': slot['startAt'],
+    });
+    await _load();
+  }
+
+  bool _canManage(dynamic status) => ['REQUESTED', 'PENDING', 'CONFIRMED'].contains(status);
+
   @override
   Widget build(BuildContext context) {
     final i = I18n.instance;
@@ -58,8 +115,17 @@ class _AppointmentsScreenState extends State<AppointmentsScreen> {
                   title: Text('${a['petName']} · ${a['serviceName'] ?? ''}'),
                   subtitle: Text('${a['startAt']}\n${a['tenantName'] ?? ''} · ${a['veterinarianName'] ?? ''} · ${a['status']}'),
                   isThreeLine: true,
-                  trailing: ['REQUESTED', 'PENDING', 'CONFIRMED'].contains(a['status'])
-                      ? IconButton(icon: const Icon(Icons.close), onPressed: () => _cancel(a['id']))
+                  trailing: _canManage(a['status'])
+                      ? PopupMenuButton<String>(
+                          onSelected: (value) {
+                            if (value == 'cancel') _cancel(a['id']);
+                            if (value == 'reschedule') _reschedule(a as Map);
+                          },
+                          itemBuilder: (_) => [
+                            PopupMenuItem(value: 'reschedule', child: Text(i.t('reschedule'))),
+                            PopupMenuItem(value: 'cancel', child: Text(i.t('cancel'))),
+                          ],
+                        )
                       : null,
                 ),
               ),
