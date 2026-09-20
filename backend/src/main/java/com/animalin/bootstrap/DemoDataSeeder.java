@@ -131,7 +131,7 @@ public class DemoDataSeeder implements CommandLineRunner {
         User adminA = user("tina.r@example.net", "Laura", "Martín", tenantAdmin, "es");
         User vetA = user("emma.t@example.net", "María", "López", vetRole, "es");
         User recA = user("nathan.k@example.net", "Carlos", "Ruiz", reception, "es");
-        User ownerA = user("emma.t@example.net", "Juan", "Pérez", ownerRole, "es");
+        User ownerA = user("juan.perez@example.net", "Juan", "Pérez", ownerRole, "es");
         User adminB = user("rachel.c@example.org", "Sofía", "Navarro", tenantAdmin, "es");
         User ownerB = user("walt.e@example.net", "Ana", "Gil", ownerRole, "es");
         User ownerBoth = user("xavier.y@example.org", "Diego", "Ortega", ownerRole, "es");
@@ -149,7 +149,7 @@ public class DemoDataSeeder implements CommandLineRunner {
         Branch branchB = branch(huellitas, "Huellitas Colón", "Avenida de Aragón 18", "Valencia");
 
         Veterinarian vet = veterinarian(sanMartin, vetA, branchA, "Medicina interna");
-        Owner juan = owner(sanMartin, ownerA, "Juan", "Pérez", "600111222", "emma.t@example.net");
+        Owner juan = owner(sanMartin, ownerA, "Juan", "Pérez", "600111222", "juan.perez@example.net");
         Owner diegoA = owner(sanMartin, ownerBoth, "Diego", "Ortega", "600333444", "xavier.y@example.org");
         Owner ana = owner(huellitas, ownerB, "Ana", "Gil", "600555666", "walt.e@example.net");
         Owner diegoB = owner(huellitas, ownerBoth, "Diego", "Ortega", "600333444", "xavier.y@example.org");
