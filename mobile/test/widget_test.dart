@@ -9,7 +9,7 @@ void main() {
   testWidgets('Spanish i18n loads owner-facing copy', (tester) async {
     await tester.pumpWidget(const MaterialApp(home: SizedBox.shrink()));
     await I18n.instance.load('es');
-    expect(I18n.instance.t('appName'), 'Animalin');
+    expect(I18n.instance.t('appName'), 'Vetora');
     expect(I18n.instance.t('login'), 'Iniciar sesión');
     expect(I18n.instance.t('reschedule'), 'Reprogramar');
   });
@@ -22,8 +22,8 @@ void main() {
   });
 
   test('brand color is teal', () {
-    expect(AnimalinTheme.brand, const Color(0xFF0F766E));
-    expect(AnimalinTheme.light.useMaterial3, isTrue);
-    expect(AnimalinTheme.dark.brightness, Brightness.dark);
+    expect(VetoraTheme.brand, const Color(0xFF0F766E));
+    expect(VetoraTheme.light.useMaterial3, isTrue);
+    expect(VetoraTheme.dark.brightness, Brightness.dark);
   });
 }

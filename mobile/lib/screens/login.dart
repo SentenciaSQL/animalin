@@ -86,10 +86,9 @@ class _LoginScreenState extends State<LoginScreen> {
           padding: const EdgeInsets.all(24),
           children: [
             const SizedBox(height: 32),
-            CircleAvatar(
-              radius: 28,
-              backgroundColor: const Color(0xFF0F766E),
-              child: Icon(Icons.pets, color: Theme.of(context).colorScheme.onPrimary),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(18),
+              child: Image.asset('assets/branding/logo.png', width: 72, height: 72),
             ),
             const SizedBox(height: 16),
             Text(i.t('appName'), style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w700)),

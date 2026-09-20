@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-class AnimalinTheme {
+class VetoraTheme {
   static const brand = Color(0xFF0F766E);
   static const sand = Color(0xFFFAF7F2);
 

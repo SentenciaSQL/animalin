@@ -72,7 +72,7 @@ export class LoginPage implements OnInit {
     if (slug) {
       this.branding.loadPublic(slug).subscribe(b => this.branding.branding.set(b));
     } else {
-      this.branding.branding.set({ name: 'Animalin', commercialName: 'Animalin' });
+      this.branding.branding.set({ name: 'Vetora', commercialName: 'Vetora', logoUrl: '/assets/branding/logo.png' });
     }
   }
 
