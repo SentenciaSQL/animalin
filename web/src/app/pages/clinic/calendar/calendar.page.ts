@@ -43,7 +43,7 @@ import { EmptyStateComponent } from '../../../shared/ui/empty-state.component';
           }
           @for (hour of hours; track hour) {
             <div class="border-t border-slate-100 px-2 py-3 text-xs text-slate-400 dark:border-white/5">{{ hour }}:00</div>
-            @for (day of dayColumns(); track day.toISOString() + hour) {
+            @for (day of dayColumns(); track day) {
               <div class="relative min-h-14 border-l border-t border-slate-100 dark:border-white/5">
                 @for (a of slotsAt(day, hour); track a.id) {
                   <button type="button" class="absolute inset-x-1 top-1 rounded-lg bg-brand-600 px-2 py-1 text-left text-[11px] text-white"

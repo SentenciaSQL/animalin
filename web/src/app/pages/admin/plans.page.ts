@@ -14,8 +14,8 @@ import { ToastService } from '../../core/services/toast.service';
       @for (p of plans(); track p.id) {
         <form class="card space-y-2" (ngSubmit)="save(p)">
           <p class="text-xs uppercase tracking-wide text-slate-400">{{ p.code }}</p>
-          <h2 class="font-display text-xl font-semibold">{{ locale() === 'en' ? p.nameEn : p.nameEs }}</h2>
-          <p class="text-sm text-slate-500">{{ locale() === 'en' ? p.descriptionEn : p.descriptionEs }}</p>
+          <h2 class="font-display text-xl font-semibold">{{ lang === 'en' ? p.nameEn : p.nameEs }}</h2>
+          <p class="text-sm text-slate-500">{{ lang === 'en' ? p.descriptionEn : p.descriptionEs }}</p>
           <p class="text-2xl font-semibold">{{ p.monthlyPrice }} €</p>
           <label class="text-xs text-slate-500">{{ 'admin.users' | translate }}
             <input class="input mt-1" type="number" [(ngModel)]="p.maxUsers" name="users{{ p.id }}" />
@@ -40,8 +40,10 @@ export class AdminPlansPage implements OnInit {
   private toast = inject(ToastService);
   private i18n = inject(TranslateService);
   plans = signal<any[]>([]);
-  locale = () => this.i18n.currentLang;
+  lang = 'es';
   ngOnInit() {
+    this.lang = this.i18n.getCurrentLang() || 'es';
+    this.i18n.onLangChange.subscribe(e => this.lang = e.lang);
     this.api.get<any[]>('/admin/plans').subscribe(p => this.plans.set(p));
   }
   save(plan: any) {
