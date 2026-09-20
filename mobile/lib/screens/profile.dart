@@ -9,6 +9,7 @@ class ProfileScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final i = I18n.instance;
+    final theme = (auth.user?['theme'] as String?) ?? 'system';
     return SafeArea(
       child: ListView(
         padding: const EdgeInsets.all(20),
@@ -21,6 +22,18 @@ class ProfileScreen extends StatelessWidget {
               value: i.locale,
               items: const [DropdownMenuItem(value: 'es', child: Text('ES')), DropdownMenuItem(value: 'en', child: Text('EN'))],
               onChanged: (v) { if (v != null) auth.setLocale(v); },
+            ),
+          ),
+          ListTile(
+            title: Text(i.t('theme')),
+            trailing: DropdownButton<String>(
+              value: ['light', 'dark', 'system'].contains(theme) ? theme : 'system',
+              items: [
+                DropdownMenuItem(value: 'system', child: Text(i.t('themeSystem'))),
+                DropdownMenuItem(value: 'light', child: Text(i.t('themeLight'))),
+                DropdownMenuItem(value: 'dark', child: Text(i.t('themeDark'))),
+              ],
+              onChanged: (v) { if (v != null) auth.setTheme(v); },
             ),
           ),
           FilledButton(onPressed: auth.logout, child: Text(i.t('logout'))),

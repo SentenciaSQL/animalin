@@ -2,6 +2,7 @@ package com.animalin.veterinarian;
 
 import com.animalin.audit.AuditService;
 import com.animalin.common.exception.ApiException;
+import com.animalin.plan.PlanLimitService;
 import com.animalin.security.AccessGuard;
 import com.animalin.tenant.TenantMembership;
 import com.animalin.tenant.TenantMembershipRepository;
@@ -38,8 +39,9 @@ public class VeterinarianController {
     private final PasswordEncoder passwordEncoder;
     private final AccessGuard accessGuard;
     private final AuditService auditService;
+    private final PlanLimitService planLimitService;
 
-    public VeterinarianController(VeterinarianRepository veterinarianRepository, VeterinarianScheduleRepository scheduleRepository, UserRepository userRepository, RoleRepository roleRepository, TenantRepository tenantRepository, TenantMembershipRepository membershipRepository, PasswordEncoder passwordEncoder, AccessGuard accessGuard, AuditService auditService) {
+    public VeterinarianController(VeterinarianRepository veterinarianRepository, VeterinarianScheduleRepository scheduleRepository, UserRepository userRepository, RoleRepository roleRepository, TenantRepository tenantRepository, TenantMembershipRepository membershipRepository, PasswordEncoder passwordEncoder, AccessGuard accessGuard, AuditService auditService, PlanLimitService planLimitService) {
         this.veterinarianRepository = veterinarianRepository;
         this.scheduleRepository = scheduleRepository;
         this.userRepository = userRepository;
@@ -49,6 +51,7 @@ public class VeterinarianController {
         this.passwordEncoder = passwordEncoder;
         this.accessGuard = accessGuard;
         this.auditService = auditService;
+        this.planLimitService = planLimitService;
     }
 
     @GetMapping
@@ -74,6 +77,8 @@ public class VeterinarianController {
     public Map<String, Object> create(@RequestBody VetRequest request) {
         accessGuard.requirePermission("STAFF_MANAGE");
         Long tenantId = accessGuard.requireStaffTenant();
+        planLimitService.assertCanAddVeterinarian(tenantId);
+        planLimitService.assertCanAddStaffUser(tenantId);
         User user = userRepository.findByEmailIgnoreCase(request.email()).orElseGet(() -> {
             User created = new User();
             created.setEmail(request.email().toLowerCase());

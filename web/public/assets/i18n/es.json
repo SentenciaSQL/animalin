@@ -73,6 +73,7 @@
     "plans": "Planes",
     "subscriptions": "Suscripciones",
     "users": "Usuarios",
+    "audit": "Auditoría",
     "profile": "Perfil",
     "logout": "Cerrar sesión",
     "notifications": "Notificaciones"
@@ -126,7 +127,12 @@
     "activate": "Activar",
     "suspend": "Suspender",
     "plansSubtitle": "Planes y límites de la plataforma",
-    "subscriptions": "Suscripciones"
+    "subscriptions": "Suscripciones",
+    "usersSubtitle": "Usuarios globales de la plataforma",
+    "auditSubtitle": "Auditoría de acciones de la plataforma",
+    "clinicAuditSubtitle": "Historial de cambios de esta veterinaria",
+    "entity": "Entidad",
+    "when": "Fecha"
   },
   "owners": {
     "title": "Propietarios",
@@ -163,6 +169,8 @@
       "treatments": "Tratamientos",
       "prescriptions": "Recetas",
       "labs": "Laboratorios",
+      "procedures": "Procedimientos",
+      "surgeries": "Cirugías",
       "documents": "Documentos",
       "appointments": "Citas",
       "weight": "Peso"
@@ -239,7 +247,7 @@
     "notifyEmail": "Notificaciones por email",
     "notifyPush": "Notificaciones push"
   },
-  "team": { "title": "Equipo veterinario", "new": "Añadir veterinario", "specialty": "Especialidad" },
+  "team": { "title": "Equipo veterinario", "new": "Añadir veterinario", "specialty": "Especialidad", "staff": "Personal" },
   "branches": { "title": "Sucursales", "new": "Nueva sucursal" },
   "services": { "title": "Servicios", "new": "Nuevo servicio", "duration": "Duración (min)", "price": "Precio" },
   "profile": { "title": "Su perfil", "password": "Cambiar contraseña", "current": "Contraseña actual", "next": "Nueva contraseña" }

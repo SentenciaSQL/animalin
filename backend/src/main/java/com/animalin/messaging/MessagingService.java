@@ -5,6 +5,7 @@ import com.animalin.dto.AppDtos;
 import com.animalin.notification.NotificationService;
 import com.animalin.owner.Owner;
 import com.animalin.pet.Pet;
+import com.animalin.plan.PlanLimitService;
 import com.animalin.security.AccessGuard;
 import com.animalin.security.TenantContext;
 import com.animalin.user.User;
@@ -32,13 +33,15 @@ public class MessagingService {
     private final UserRepository userRepository;
     private final AccessGuard accessGuard;
     private final NotificationService notificationService;
+    private final PlanLimitService planLimitService;
 
-    public MessagingService(ConversationRepository conversationRepository, MessageRepository messageRepository, UserRepository userRepository, AccessGuard accessGuard, NotificationService notificationService) {
+    public MessagingService(ConversationRepository conversationRepository, MessageRepository messageRepository, UserRepository userRepository, AccessGuard accessGuard, NotificationService notificationService, PlanLimitService planLimitService) {
         this.conversationRepository = conversationRepository;
         this.messageRepository = messageRepository;
         this.userRepository = userRepository;
         this.accessGuard = accessGuard;
         this.notificationService = notificationService;
+        this.planLimitService = planLimitService;
     }
 
 
@@ -92,6 +95,7 @@ public class MessagingService {
             owner = accessGuard.requireOwner(request.ownerId());
             tenantId = owner.getTenantId();
         }
+        planLimitService.assertMessagingEnabled(tenantId);
         Conversation conversation = new Conversation();
         conversation.setTenantId(tenantId);
         conversation.setOwner(owner);

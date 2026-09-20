@@ -22,8 +22,9 @@ public interface PetRepository extends JpaRepository<Pet, Long> {
                    or lower(o.lastName) like lower(concat('%', cast(:q as string), '%')))
               and (:species is null or p.species = cast(:species as string))
               and (:status is null or p.status = cast(:status as string))
+              and (:ownerId is null or o.id = :ownerId)
             """)
-    Page<Pet> search(Long tenantId, String q, String species, String status, Pageable pageable);
+    Page<Pet> search(Long tenantId, String q, String species, String status, Long ownerId, Pageable pageable);
     long countByTenantId(Long tenantId);
     long countByTenantIdAndCreatedAtAfter(Long tenantId, Instant after);
     long countByDeletedFalse();

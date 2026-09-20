@@ -11,21 +11,27 @@ class ApiClient {
   final String baseUrl;
 
   Future<dynamic> get(String path, [Map<String, String>? query]) async {
-    final uri = Uri.parse('$baseUrl$path').replace(queryParameters: query);
-    final res = await http.get(uri, headers: _headers());
-    return _decode(res);
+    return _send(() => http.get(Uri.parse('$baseUrl$path').replace(queryParameters: query), headers: _headers()));
   }
 
   Future<dynamic> post(String path, [Map<String, dynamic>? body]) async {
-    final res = await http.post(Uri.parse('$baseUrl$path'),
-        headers: _headers(), body: jsonEncode(body ?? {}));
-    return _decode(res);
+    return _send(() => http.post(Uri.parse('$baseUrl$path'), headers: _headers(), body: jsonEncode(body ?? {})));
+  }
+
+  Future<dynamic> put(String path, [Map<String, dynamic>? body]) async {
+    return _send(() => http.put(Uri.parse('$baseUrl$path'), headers: _headers(), body: jsonEncode(body ?? {})));
   }
 
   Future<dynamic> patch(String path, Map<String, dynamic> body) async {
-    final res = await http.patch(Uri.parse('$baseUrl$path'),
-        headers: _headers(), body: jsonEncode(body));
-    return _decode(res);
+    return _send(() => http.patch(Uri.parse('$baseUrl$path'), headers: _headers(), body: jsonEncode(body)));
+  }
+
+  Future<List<int>> bytes(String path) async {
+    final res = await _raw(() => http.get(Uri.parse('$baseUrl$path'), headers: _headers()));
+    if (res.statusCode >= 400) {
+      throw ApiException(res.statusCode, res.body);
+    }
+    return res.bodyBytes;
   }
 
   Map<String, String> _headers() {
@@ -36,8 +42,21 @@ class ApiClient {
     return headers;
   }
 
+  Future<http.Response> _raw(Future<http.Response> Function() send) async {
+    var res = await send();
+    if (res.statusCode == 401 && await auth.refreshAccessToken()) {
+      res = await send();
+    }
+    return res;
+  }
+
+  Future<dynamic> _send(Future<http.Response> Function() send) async {
+    final res = await _raw(send);
+    return _decode(res);
+  }
+
   dynamic _decode(http.Response res) {
-    if (res.statusCode == 401 && auth.refreshToken != null) {
+    if (res.statusCode == 401) {
       throw UnauthorizedException();
     }
     if (res.statusCode >= 400) {

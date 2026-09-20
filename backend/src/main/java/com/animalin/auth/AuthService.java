@@ -3,6 +3,7 @@ package com.animalin.auth;
 import com.animalin.audit.AuditService;
 import com.animalin.common.exception.ApiException;
 import com.animalin.config.AnimalinProperties;
+import com.animalin.notification.NotificationService;
 import com.animalin.security.JwtService;
 import com.animalin.security.TenantContext;
 import com.animalin.tenant.Tenant;
@@ -41,8 +42,9 @@ public class AuthService {
     private final JwtService jwtService;
     private final AnimalinProperties properties;
     private final AuditService auditService;
+    private final NotificationService notificationService;
 
-    public AuthService(UserRepository userRepository, RoleRepository roleRepository, TenantRepository tenantRepository, TenantMembershipRepository membershipRepository, RefreshTokenRepository refreshTokenRepository, PasswordResetTokenRepository passwordResetTokenRepository, PasswordEncoder passwordEncoder, JwtService jwtService, AnimalinProperties properties, AuditService auditService) {
+    public AuthService(UserRepository userRepository, RoleRepository roleRepository, TenantRepository tenantRepository, TenantMembershipRepository membershipRepository, RefreshTokenRepository refreshTokenRepository, PasswordResetTokenRepository passwordResetTokenRepository, PasswordEncoder passwordEncoder, JwtService jwtService, AnimalinProperties properties, AuditService auditService, NotificationService notificationService) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.tenantRepository = tenantRepository;
@@ -53,6 +55,7 @@ public class AuthService {
         this.jwtService = jwtService;
         this.properties = properties;
         this.auditService = auditService;
+        this.notificationService = notificationService;
     }
 
 
@@ -141,7 +144,9 @@ public class AuthService {
             token.setTokenHash(sha256(raw));
             token.setExpiresAt(Instant.now().plus(2, ChronoUnit.HOURS));
             passwordResetTokenRepository.save(token);
-            // Email integration is prepared: the raw token would be sent here.
+            notificationService.sendPlainEmail(user.getEmail(),
+                    "Restablecer contraseña / Reset password",
+                    "Use this token on /reset-password: " + raw);
         });
     }
 

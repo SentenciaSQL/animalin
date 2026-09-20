@@ -40,7 +40,7 @@ public class SearchService {
             return Map.of("pets", List.of(), "owners", List.of(), "veterinarians", List.of());
         }
         var page = PageRequest.of(0, 8);
-        List<Map<String, Object>> pets = petRepository.search(tenantId, q, null, null, page).stream()
+        List<Map<String, Object>> pets = petRepository.search(tenantId, q, null, null, null, page).stream()
                 .map(p -> Map.<String, Object>of("id", p.getId(), "name", p.getName(), "species", p.getSpecies(), "owner", p.getOwner().fullName()))
                 .toList();
         List<Map<String, Object>> owners = ownerRepository.search(tenantId, q, null, page).stream()

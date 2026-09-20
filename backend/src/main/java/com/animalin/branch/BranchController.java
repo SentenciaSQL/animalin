@@ -1,6 +1,7 @@
 package com.animalin.branch;
 
 import com.animalin.audit.AuditService;
+import com.animalin.plan.PlanLimitService;
 import com.animalin.security.AccessGuard;
 import com.animalin.security.TenantContext;
 import com.animalin.tenant.TenantMembershipRepository;
@@ -26,13 +27,15 @@ public class BranchController {
     private final AccessGuard accessGuard;
     private final AuditService auditService;
     private final TenantMembershipRepository membershipRepository;
+    private final PlanLimitService planLimitService;
 
     public BranchController(BranchRepository branchRepository, AccessGuard accessGuard, AuditService auditService,
-                            TenantMembershipRepository membershipRepository) {
+                            TenantMembershipRepository membershipRepository, PlanLimitService planLimitService) {
         this.branchRepository = branchRepository;
         this.accessGuard = accessGuard;
         this.auditService = auditService;
         this.membershipRepository = membershipRepository;
+        this.planLimitService = planLimitService;
     }
 
     @GetMapping
@@ -57,6 +60,7 @@ public class BranchController {
     public Branch create(@RequestBody BranchRequest request) {
         accessGuard.requirePermission("BRANCH_MANAGE");
         Long tenantId = accessGuard.requireStaffTenant();
+        planLimitService.assertCanAddBranch(tenantId);
         Branch branch = new Branch();
         branch.setTenantId(tenantId);
         apply(branch, request);

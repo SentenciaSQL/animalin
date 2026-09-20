@@ -104,6 +104,26 @@ class _HomeScreenState extends State<HomeScreen> {
                 isThreeLine: treatments.length > 1,
               ),
             ),
+            if ((home['unreadMessages'] ?? 0) > 0) ...[
+              const SizedBox(height: 8),
+              Card(
+                child: ListTile(
+                  leading: const Icon(Icons.chat_bubble_outline),
+                  title: Text(i.t('messages')),
+                  subtitle: Text('${home['unreadMessages']} ${i.t('unread')}'),
+                ),
+              ),
+            ],
+            if ((home['unreadNotifications'] ?? 0) > 0) ...[
+              const SizedBox(height: 8),
+              Card(
+                child: ListTile(
+                  leading: const Icon(Icons.notifications_outlined),
+                  title: Text(i.t('notifications')),
+                  subtitle: Text('${home['unreadNotifications']} ${i.t('unread')}'),
+                ),
+              ),
+            ],
             const SizedBox(height: 12),
             Text(i.t('quickActions'), style: Theme.of(context).textTheme.titleMedium),
             const SizedBox(height: 8),

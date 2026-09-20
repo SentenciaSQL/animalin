@@ -64,7 +64,9 @@ interface NavItem {
                     @if ($any(results())[group.key]?.length) {
                       <p class="px-4 pt-3 text-xs font-semibold uppercase tracking-wide text-slate-400">{{ group.label | translate }}</p>
                       @for (item of $any(results())[group.key]; track item.id) {
-                        <a [routerLink]="group.path + item.id" (click)="results.set(null)" class="block px-4 py-2 text-sm hover:bg-slate-50 dark:hover:bg-white/5">
+                        <a [routerLink]="group.key === 'owners' ? ['/pets'] : group.path + item.id"
+                           [queryParams]="group.key === 'owners' ? { owner: item.id } : null"
+                           (click)="results.set(null)" class="block px-4 py-2 text-sm hover:bg-slate-50 dark:hover:bg-white/5">
                           {{ item.name }} <span class="text-slate-400">{{ item.owner || item.email || item.specialty }}</span>
                         </a>
                       }
@@ -82,6 +84,13 @@ interface NavItem {
           </button>
           <app-language-selector />
           <app-theme-selector />
+          @if ((auth.user()?.memberships?.length || 0) > 1) {
+            <select class="input w-40 text-xs" [value]="auth.user()?.tenantSlug || ''" (change)="switchClinic($any($event.target).value)">
+              @for (m of auth.user()?.memberships || []; track m.slug) {
+                <option [value]="m.slug">{{ m.name }}</option>
+              }
+            </select>
+          }
           <div class="hidden items-center gap-2 sm:flex">
             <div class="text-right">
               <p class="text-sm font-medium">{{ auth.user()?.fullName }}</p>
@@ -136,6 +145,8 @@ export class ShellComponent implements OnInit {
     { path: '/admin/tenants', label: 'nav.tenants', roles: ['SUPER_ADMIN'] },
     { path: '/admin/plans', label: 'nav.plans', roles: ['SUPER_ADMIN'] },
     { path: '/admin/subscriptions', label: 'nav.subscriptions', roles: ['SUPER_ADMIN'] },
+    { path: '/admin/users', label: 'nav.users', roles: ['SUPER_ADMIN'] },
+    { path: '/admin/audit', label: 'nav.audit', roles: ['SUPER_ADMIN'] },
     { path: '/owners', label: 'nav.owners', roles: ['TENANT_ADMIN', 'RECEPTIONIST', 'VETERINARIAN'] },
     { path: '/pets', label: 'nav.pets' },
     { path: '/calendar', label: 'nav.calendar' },
@@ -146,6 +157,7 @@ export class ShellComponent implements OnInit {
     { path: '/messages', label: 'nav.messages' },
     { path: '/reports', label: 'nav.reports', permission: 'REPORT_VIEW' },
     { path: '/settings', label: 'nav.settings', roles: ['TENANT_ADMIN'] },
+    { path: '/audit', label: 'nav.audit', roles: ['TENANT_ADMIN'] },
     { path: '/profile', label: 'nav.profile' }
   ];
 
@@ -209,5 +221,12 @@ export class ShellComponent implements OnInit {
       this.unread.update(v => Math.max(0, v - 1));
       this.loadNotes();
     });
+  }
+
+  switchClinic(slug: string): void {
+    if (!slug || slug === this.auth.user()?.tenantSlug) {
+      return;
+    }
+    this.auth.switchTenant(slug).subscribe(() => window.location.reload());
   }
 }

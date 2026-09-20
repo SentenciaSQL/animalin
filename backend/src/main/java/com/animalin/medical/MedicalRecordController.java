@@ -98,4 +98,31 @@ public class MedicalRecordController {
     public AppDtos.LaboratoryResponse createLab(@RequestBody AppDtos.LaboratoryRequest request) {
         return medicalRecordService.createLaboratory(request);
     }
+
+    @PutMapping("/treatments/{id}")
+    public AppDtos.TreatmentResponse updateTreatment(@PathVariable Long id, @RequestBody AppDtos.TreatmentRequest request) {
+        return medicalRecordService.updateTreatment(id, request);
+    }
+
+    @GetMapping("/pets/{petId}/procedures")
+    public List<AppDtos.ProcedureResponse> procedures(@PathVariable Long petId) {
+        return medicalRecordService.procedures(petId);
+    }
+
+    @PostMapping("/procedures")
+    @ResponseStatus(HttpStatus.CREATED)
+    public AppDtos.ProcedureResponse createProcedure(@RequestBody AppDtos.ProcedureRequest request) {
+        return medicalRecordService.createProcedure(request);
+    }
+
+    @GetMapping("/pets/{petId}/surgeries")
+    public List<AppDtos.SurgeryResponse> surgeries(@PathVariable Long petId) {
+        return medicalRecordService.surgeries(petId);
+    }
+
+    @PostMapping("/surgeries")
+    @ResponseStatus(HttpStatus.CREATED)
+    public AppDtos.SurgeryResponse createSurgery(@RequestBody AppDtos.SurgeryRequest request) {
+        return medicalRecordService.createSurgery(request);
+    }
 }

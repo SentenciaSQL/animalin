@@ -130,9 +130,18 @@ public class AppointmentService {
 
     @Transactional
     public AppDtos.AppointmentResponse update(Long id, AppDtos.AppointmentRequest request) {
-        accessGuard.requirePermission("APPOINTMENT_UPDATE");
-        Appointment appointment = requireStaffAppointment(id);
+        Appointment appointment = requireAppointment(id);
+        if (accessGuard.isOwnerContext()) {
+            if (!Set.of("REQUESTED", "PENDING", "CONFIRMED").contains(appointment.getStatus())) {
+                throw ApiException.forbidden("Solo puede reprogramar citas pendientes o confirmadas");
+            }
+        } else {
+            accessGuard.requirePermission("APPOINTMENT_UPDATE");
+        }
         fillSchedule(appointment, request, appointment.getTenantId(), appointment.getId());
+        if (accessGuard.isOwnerContext() && !"REQUESTED".equals(appointment.getStatus())) {
+            appointment.setStatus("REQUESTED");
+        }
         auditService.record("UPDATE", "APPOINTMENT", appointment.getId(), "Reprogramada");
         notifyStatus(appointment, "APPOINTMENT_RESCHEDULED", "Cita reprogramada", "Appointment rescheduled");
         return toDto(appointment);
@@ -146,6 +155,7 @@ public class AppointmentService {
             if (!"CANCELLED".equals(status) || !OPEN_STATUSES.contains(current)) {
                 throw ApiException.forbidden("Solo puede cancelar la cita");
             }
+            enforceCancellationWindow(appointment);
         } else {
             accessGuard.requirePermission("APPOINTMENT_UPDATE");
             Set<String> allowed = TRANSITIONS.getOrDefault(current, Set.of());
@@ -263,6 +273,15 @@ public class AppointmentService {
     private Appointment requireStaffAppointment(Long id) {
         return appointmentRepository.findByIdAndTenantId(id, accessGuard.requireStaffTenant())
                 .orElseThrow(() -> ApiException.notFound("Cita no encontrada"));
+    }
+
+    private void enforceCancellationWindow(Appointment appointment) {
+        int hours = settingsRepository.findByTenantId(appointment.getTenantId())
+                .map(TenantSettings::getCancellationHours).orElse(0);
+        if (hours > 0 && appointment.getStartAt() != null
+                && Instant.now().plusSeconds(hours * 3600L).isAfter(appointment.getStartAt())) {
+            throw ApiException.badRequest("No se puede cancelar con menos de " + hours + " horas de antelación");
+        }
     }
 
     private void notifyStatus(Appointment appointment, String type, String titleEs, String titleEn) {

@@ -81,6 +81,14 @@ public class OwnerService {
         return toDto(owner);
     }
 
+    @Transactional
+    public void delete(Long id) {
+        accessGuard.requirePermission("OWNER_UPDATE");
+        Owner owner = accessGuard.requireOwner(id);
+        owner.softDelete();
+        auditService.record("DELETE", "OWNER", owner.getId(), owner.fullName());
+    }
+
     private void apply(Owner owner, AppDtos.OwnerRequest request) {
         if (!StringUtils.hasText(request.firstName()) || !StringUtils.hasText(request.lastName())) {
             throw ApiException.badRequest("Nombre y apellidos son obligatorios");

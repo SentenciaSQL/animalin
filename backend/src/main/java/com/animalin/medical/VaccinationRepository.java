@@ -11,4 +11,5 @@ public interface VaccinationRepository extends JpaRepository<Vaccination, Long> 
     List<Vaccination> findByTenantIdAndNextDoseAtBetween(Long tenantId, LocalDate from, LocalDate to);
     List<Vaccination> findByPet_Owner_User_IdOrderByAppliedAtDesc(Long userId);
     List<Vaccination> findByTenantIdOrderByAppliedAtDesc(Long tenantId);
+    List<Vaccination> findByNextDoseAtBetween(LocalDate from, LocalDate to);
 }

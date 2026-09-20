@@ -1,5 +1,5 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormsModule, FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslatePipe } from '@ngx-translate/core';
 import { ApiService } from '../../core/services/api.service';
 import { ToastService } from '../../core/services/toast.service';
@@ -7,7 +7,7 @@ import { StatusBadgePipe } from '../../shared/ui/status-badge.pipe';
 
 @Component({
   standalone: true,
-  imports: [ReactiveFormsModule, TranslatePipe, StatusBadgePipe],
+  imports: [ReactiveFormsModule, FormsModule, TranslatePipe, StatusBadgePipe],
   template: `
     <div class="flex items-center justify-between">
       <h1 class="font-display text-2xl font-semibold">{{ 'nav.tenants' | translate }}</h1>
@@ -29,7 +29,13 @@ import { StatusBadgePipe } from '../../shared/ui/status-badge.pipe';
             <tr class="border-t border-slate-100 dark:border-white/5">
               <td class="px-4 py-3 font-medium">{{ t.name }}</td>
               <td class="px-4 py-3">{{ t.slug }}</td>
-              <td class="px-4 py-3">{{ t.plan?.code }}</td>
+              <td class="px-4 py-3">
+                <select class="input py-1 text-xs" [ngModel]="t.plan?.code" (ngModelChange)="changePlan(t, $event)">
+                  <option value="BASIC">BASIC</option>
+                  <option value="PROFESSIONAL">PROFESSIONAL</option>
+                  <option value="PREMIUM">PREMIUM</option>
+                </select>
+              </td>
               <td class="px-4 py-3"><span [class]="t.status | statusBadge">{{ t.status }}</span></td>
               <td class="px-4 py-3 text-right">
                 @if (t.status !== 'ACTIVE') {
@@ -82,6 +88,13 @@ export class AdminTenantsPage implements OnInit {
 
   status(id: number, status: string) {
     this.api.post(`/admin/tenants/${id}/status`, { status }).subscribe(() => this.load());
+  }
+
+  changePlan(tenant: any, planCode: string) {
+    this.api.put(`/admin/tenants/${tenant.id}`, { planCode }).subscribe({
+      next: () => this.load(),
+      error: () => this.toast.show('common.error', true)
+    });
   }
 
   save() {

@@ -51,5 +51,14 @@
   "review": "Review request",
   "unread": "unread",
   "invalid": "Invalid credentials",
-  "contact": "Contact"
+  "contact": "Contact",
+  "notifications": "Notifications",
+  "resetToken": "Reset code",
+  "resetSubmit": "Save new password",
+  "pdfReady": "PDF ready",
+  "theme": "Theme",
+  "themeLight": "Light",
+  "themeDark": "Dark",
+  "themeSystem": "System",
+  "reschedule": "Reschedule"
 }

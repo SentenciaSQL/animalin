@@ -109,7 +109,21 @@ class _PetDetailScreenState extends State<PetDetailScreen> with SingleTickerProv
                 _list(timeline, (e) => ListTile(title: Text('${e['title']}'), subtitle: Text('${e['type']} · ${e['at']}'))),
                 _list(vaccines, (v) => ListTile(title: Text('${v['vaccineName']}'), subtitle: Text('${v['status']} · ${v['appliedAt']}'))),
                 _list(treatments, (t) => ListTile(title: Text('${t['name']}'), subtitle: Text('${t['status']} · ${t['startDate'] ?? ''}'))),
-                _list(prescriptions, (p) => ListTile(title: Text('${p['notes'] ?? i.t('prescriptions')}'), subtitle: Text('${p['issuedAt'] ?? ''}'))),
+                _list(prescriptions, (p) => ListTile(
+                  title: Text('${p['notes'] ?? i.t('prescriptions')}'),
+                  subtitle: Text('${p['issuedAt'] ?? ''} · ${pet['tenantName'] ?? ''}'),
+                  trailing: IconButton(
+                    icon: const Icon(Icons.picture_as_pdf_outlined),
+                    onPressed: () async {
+                      try {
+                        await widget.auth.api.bytes('/prescriptions/${p['id']}/pdf');
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(i.t('pdfReady'))));
+                        }
+                      } catch (_) {}
+                    },
+                  ),
+                )),
                 _list(documents, (d) => ListTile(title: Text('${d['title']}'), subtitle: Text('${d['category'] ?? ''} · ${d['createdAt'] ?? ''}'))),
                 _list(appointments, (a) => ListTile(
                   title: Text('${a['serviceName'] ?? ''} · ${a['status']}'),
