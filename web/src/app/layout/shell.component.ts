@@ -10,10 +10,12 @@ import { SearchResult } from '../core/models';
 import { BrandMarkComponent } from '../shared/ui/brand-mark.component';
 import { LanguageSelectorComponent } from '../shared/ui/language-selector.component';
 import { ThemeSelectorComponent } from '../shared/ui/theme-selector.component';
+import { NavIconComponent } from '../shared/ui/nav-icon.component';
 
 interface NavItem {
   path: string;
   label: string;
+  icon: string;
   roles?: string[];
   permission?: string;
 }
@@ -22,7 +24,7 @@ interface NavItem {
   standalone: true,
   imports: [
     RouterOutlet, RouterLink, RouterLinkActive, FormsModule, TranslatePipe,
-    BrandMarkComponent, LanguageSelectorComponent, ThemeSelectorComponent
+    BrandMarkComponent, LanguageSelectorComponent, ThemeSelectorComponent, NavIconComponent
   ],
   template: `
     <div class="flex min-h-screen bg-sand-50 dark:bg-slate-950">
@@ -39,7 +41,9 @@ interface NavItem {
           @for (item of visibleNav(); track item.path) {
             <a [routerLink]="item.path" routerLinkActive="bg-brand-50 text-brand-800 dark:bg-brand-900/40 dark:text-brand-100"
                class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-600 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-white/5">
-              <span class="grid h-8 w-8 place-items-center rounded-lg bg-slate-100 text-xs font-semibold dark:bg-white/10">{{ item.path.replace('/', '').charAt(0).toUpperCase() }}</span>
+              <span class="grid h-8 w-8 place-items-center rounded-lg bg-slate-100 text-brand-700 dark:bg-white/10 dark:text-brand-100">
+                <app-nav-icon [name]="item.icon" />
+              </span>
               @if (!collapsed()) {
                 <span>{{ item.label | translate }}</span>
               }
@@ -103,7 +107,10 @@ interface NavItem {
         @if (mobileOpen()) {
           <div class="border-b border-slate-200 bg-white p-3 lg:hidden dark:border-white/10 dark:bg-slate-900">
             @for (item of visibleNav(); track item.path) {
-              <a [routerLink]="item.path" (click)="mobileOpen.set(false)" class="block rounded-xl px-3 py-2 text-sm">{{ item.label | translate }}</a>
+              <a [routerLink]="item.path" (click)="mobileOpen.set(false)" class="flex items-center gap-3 rounded-xl px-3 py-2 text-sm">
+                <app-nav-icon [name]="item.icon" />
+                <span>{{ item.label | translate }}</span>
+              </a>
             }
           </div>
         }
@@ -140,25 +147,25 @@ export class ShellComponent implements OnInit {
   private search$ = new Subject<string>();
 
   nav: NavItem[] = [
-    { path: '/dashboard', label: 'nav.dashboard' },
-    { path: '/admin', label: 'nav.admin', roles: ['SUPER_ADMIN'] },
-    { path: '/admin/tenants', label: 'nav.tenants', roles: ['SUPER_ADMIN'] },
-    { path: '/admin/plans', label: 'nav.plans', roles: ['SUPER_ADMIN'] },
-    { path: '/admin/subscriptions', label: 'nav.subscriptions', roles: ['SUPER_ADMIN'] },
-    { path: '/admin/users', label: 'nav.users', roles: ['SUPER_ADMIN'] },
-    { path: '/admin/audit', label: 'nav.audit', roles: ['SUPER_ADMIN'] },
-    { path: '/owners', label: 'nav.owners', roles: ['TENANT_ADMIN', 'RECEPTIONIST', 'VETERINARIAN'] },
-    { path: '/pets', label: 'nav.pets' },
-    { path: '/calendar', label: 'nav.calendar' },
-    { path: '/consultations/new', label: 'nav.consultations', permission: 'MEDICAL_RECORD_WRITE' },
-    { path: '/team', label: 'nav.team', roles: ['TENANT_ADMIN'] },
-    { path: '/branches', label: 'nav.branches', roles: ['TENANT_ADMIN'] },
-    { path: '/services', label: 'nav.services', roles: ['TENANT_ADMIN'] },
-    { path: '/messages', label: 'nav.messages' },
-    { path: '/reports', label: 'nav.reports', permission: 'REPORT_VIEW' },
-    { path: '/settings', label: 'nav.settings', roles: ['TENANT_ADMIN'] },
-    { path: '/audit', label: 'nav.audit', roles: ['TENANT_ADMIN'] },
-    { path: '/profile', label: 'nav.profile' }
+    { path: '/dashboard', label: 'nav.dashboard', icon: 'home' },
+    { path: '/admin', label: 'nav.admin', icon: 'admin', roles: ['SUPER_ADMIN'] },
+    { path: '/admin/tenants', label: 'nav.tenants', icon: 'tenants', roles: ['SUPER_ADMIN'] },
+    { path: '/admin/plans', label: 'nav.plans', icon: 'plans', roles: ['SUPER_ADMIN'] },
+    { path: '/admin/subscriptions', label: 'nav.subscriptions', icon: 'subscriptions', roles: ['SUPER_ADMIN'] },
+    { path: '/admin/users', label: 'nav.users', icon: 'users', roles: ['SUPER_ADMIN'] },
+    { path: '/admin/audit', label: 'nav.audit', icon: 'audit', roles: ['SUPER_ADMIN'] },
+    { path: '/owners', label: 'nav.owners', icon: 'owners', roles: ['TENANT_ADMIN', 'RECEPTIONIST', 'VETERINARIAN'] },
+    { path: '/pets', label: 'nav.pets', icon: 'pets' },
+    { path: '/calendar', label: 'nav.calendar', icon: 'calendar' },
+    { path: '/consultations/new', label: 'nav.consultations', icon: 'consultations', permission: 'MEDICAL_RECORD_WRITE' },
+    { path: '/team', label: 'nav.team', icon: 'team', roles: ['TENANT_ADMIN'] },
+    { path: '/branches', label: 'nav.branches', icon: 'branches', roles: ['TENANT_ADMIN'] },
+    { path: '/services', label: 'nav.services', icon: 'services', roles: ['TENANT_ADMIN'] },
+    { path: '/messages', label: 'nav.messages', icon: 'messages' },
+    { path: '/reports', label: 'nav.reports', icon: 'reports', permission: 'REPORT_VIEW' },
+    { path: '/settings', label: 'nav.settings', icon: 'settings', roles: ['TENANT_ADMIN'] },
+    { path: '/audit', label: 'nav.audit', icon: 'audit', roles: ['TENANT_ADMIN'] },
+    { path: '/profile', label: 'nav.profile', icon: 'profile' }
   ];
 
   groups = [

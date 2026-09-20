@@ -1,5 +1,5 @@
 {
-  "app": { "name": "Animalin", "tagline": "Multi-tenant veterinary platform" },
+  "app": { "name": "Vetora", "tagline": "Multi-tenant veterinary platform" },
   "common": {
     "search": "Search",
     "save": "Save",

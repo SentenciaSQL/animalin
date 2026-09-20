@@ -10,7 +10,9 @@ import { ThemeService } from '../../core/services/theme.service';
       @if (logo()) {
         <img [src]="logo()!" [alt]="branding.displayName()" class="h-9 w-9 rounded-xl object-cover" (error)="failed.set(true)" />
       } @else {
-        <span class="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-brand-700 text-sm font-bold text-white" aria-hidden="true">A</span>
+        <span class="grid h-9 w-9 shrink-0 place-items-center overflow-hidden rounded-xl bg-brand-700" aria-hidden="true">
+          <img src="/assets/branding/logo.png" alt="" class="h-9 w-9 object-cover" />
+        </span>
       }
       @if (showName()) {
         <span class="truncate font-display text-base font-semibold">{{ branding.displayName() }}</span>

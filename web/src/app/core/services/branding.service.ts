@@ -12,15 +12,17 @@ export class BrandingService {
   loadForSession(): void {
     if (this.auth.isSuperAdmin() || !this.auth.user()?.tenantId) {
       this.branding.set({
-        name: 'Animalin',
-        commercialName: 'Animalin',
+        name: 'Vetora',
+        commercialName: 'Vetora',
+        logoUrl: '/assets/branding/logo.png',
+        iconUrl: '/assets/branding/logo.png',
         primaryLanguage: 'es'
       });
       return;
     }
     this.api.get<Branding>('/settings/branding').subscribe({
       next: value => this.branding.set(value),
-      error: () => this.branding.set({ name: 'Animalin', commercialName: 'Animalin' })
+      error: () => this.branding.set({ name: 'Vetora', commercialName: 'Vetora', logoUrl: '/assets/branding/logo.png' })
     });
   }
 
@@ -30,17 +32,17 @@ export class BrandingService {
 
   displayName(): string {
     const brand = this.branding();
-    return brand?.commercialName || brand?.name || 'Animalin';
+    return brand?.commercialName || brand?.name || 'Vetora';
   }
 
   logoUrl(dark: boolean): string | null {
     const brand = this.branding();
     if (!brand) {
-      return null;
+      return '/assets/branding/logo.png';
     }
     if (dark && brand.darkLogoUrl) {
       return brand.darkLogoUrl;
     }
-    return brand.logoUrl || brand.iconUrl || null;
+    return brand.logoUrl || brand.iconUrl || '/assets/branding/logo.png';
   }
 }
