@@ -9,4 +9,4 @@ flutter pub get
 flutter run --dart-define=API_URL=http://10.0.2.2:8080/api/v1
 ```
 
-Usuarios de demostración: `emma.t@example.net` / `Admin123!`
+Usuarios de demostración: `juan.owner@animalin.app` / `Admin123!`

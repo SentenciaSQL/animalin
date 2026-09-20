@@ -22,17 +22,21 @@ import { PageResponse, Pet } from '../../../core/models';
         </label>
         <textarea class="input min-h-20" formControlName="reason" [placeholder]="'consultations.reason' | translate"></textarea>
         <textarea class="input min-h-20" formControlName="symptoms" [placeholder]="'consultations.symptoms' | translate"></textarea>
+        <textarea class="input min-h-20" formControlName="anamnesis" [placeholder]="'consultations.anamnesis' | translate"></textarea>
         <textarea class="input min-h-20" formControlName="physicalExam" [placeholder]="'consultations.exam' | translate"></textarea>
         <input class="input" formControlName="diagnosis" [placeholder]="'consultations.diagnosis' | translate" />
+        <textarea class="input min-h-20" formControlName="differentialDiagnosis" [placeholder]="'consultations.differential' | translate"></textarea>
         <textarea class="input min-h-20" formControlName="treatmentPlan" [placeholder]="'consultations.plan' | translate"></textarea>
         <textarea class="input min-h-20" formControlName="recommendations" [placeholder]="'consultations.recommendations' | translate"></textarea>
+        <textarea class="input min-h-20" formControlName="internalNotes" [placeholder]="'consultations.internal' | translate"></textarea>
+        <input class="input" type="datetime-local" formControlName="nextControlAt" [placeholder]="'consultations.followUp' | translate" />
       </div>
       <div class="card space-y-3">
         <h2 class="font-medium">{{ 'consultations.vitals' | translate }}</h2>
-        <input class="input" type="number" step="0.1" formControlName="weightKg" placeholder="kg" />
-        <input class="input" type="number" step="0.1" formControlName="temperatureC" placeholder="°C" />
-        <input class="input" type="number" formControlName="heartRate" placeholder="HR" />
-        <input class="input" type="number" formControlName="respiratoryRate" placeholder="RR" />
+        <input class="input" type="number" step="0.1" formControlName="weightKg" [placeholder]="'consultations.kg' | translate" />
+        <input class="input" type="number" step="0.1" formControlName="temperatureC" [placeholder]="'consultations.temp' | translate" />
+        <input class="input" type="number" formControlName="heartRate" [placeholder]="'consultations.hr' | translate" />
+        <input class="input" type="number" formControlName="respiratoryRate" [placeholder]="'consultations.rr' | translate" />
         <button class="btn-primary w-full">{{ 'common.save' | translate }}</button>
       </div>
     </form>
@@ -47,12 +51,17 @@ export class ConsultationPage implements OnInit {
   pets: Pet[] = [];
   form = this.fb.group({
     petId: ['', Validators.required],
+    appointmentId: [null as number | null],
     reason: [''],
     symptoms: [''],
+    anamnesis: [''],
     physicalExam: [''],
     diagnosis: [''],
+    differentialDiagnosis: [''],
     treatmentPlan: [''],
     recommendations: [''],
+    internalNotes: [''],
+    nextControlAt: [''],
     weightKg: [null as number | null],
     temperatureC: [null as number | null],
     heartRate: [null as number | null],
@@ -63,13 +72,21 @@ export class ConsultationPage implements OnInit {
     this.api.get<PageResponse<Pet>>('/pets', { size: 100 }).subscribe(r => {
       this.pets = r.content || [];
       const petId = this.route.snapshot.queryParamMap.get('petId');
+      const appointmentId = this.route.snapshot.queryParamMap.get('appointmentId');
       if (petId) this.form.patchValue({ petId });
+      if (appointmentId) this.form.patchValue({ appointmentId: Number(appointmentId) });
     });
   }
 
   save() {
     const value = this.form.getRawValue();
-    this.api.post('/consultations', { ...value, petId: Number(value.petId) }).subscribe({
+    const payload: Record<string, unknown> = { ...value, petId: Number(value.petId) };
+    if (value.nextControlAt) {
+      payload['nextControlAt'] = new Date(value.nextControlAt).toISOString();
+    } else {
+      delete payload['nextControlAt'];
+    }
+    this.api.post('/consultations', payload).subscribe({
       next: () => { this.toast.show('common.saved'); void this.router.navigate(['/pets', value.petId]); },
       error: () => this.toast.show('common.error', true)
     });

@@ -70,7 +70,7 @@ public class BrandingService {
     }
 
     @Transactional
-    public TenantSettings updateSettings(SettingsUpdateRequest request) {
+    public AppDtos.SettingsResponse updateSettings(SettingsUpdateRequest request) {
         accessGuard.requirePermission("SETTINGS_UPDATE");
         Long tenantId = accessGuard.requireStaffTenant();
         TenantSettings settings = settingsRepository.findByTenantId(tenantId)
@@ -81,7 +81,26 @@ public class BrandingService {
         if (request.notifyEmail() != null) settings.setNotifyEmail(request.notifyEmail());
         if (request.notifyPush() != null) settings.setNotifyPush(request.notifyPush());
         auditService.record("UPDATE", "SETTINGS", settings.getId(), "Configuración de veterinaria");
-        return settings;
+        return toSettings(settings);
+    }
+
+    @Transactional(readOnly = true)
+    public AppDtos.SettingsResponse currentSettings() {
+        Long tenantId = accessGuard.requireStaffTenant();
+        TenantSettings settings = settingsRepository.findByTenantId(tenantId)
+                .orElseThrow(() -> ApiException.notFound("Configuración no encontrada"));
+        return toSettings(settings);
+    }
+
+    private AppDtos.SettingsResponse toSettings(TenantSettings settings) {
+        return new AppDtos.SettingsResponse(
+                settings.getDateFormat(),
+                settings.getDefaultAppointmentMin(),
+                settings.getCancellationHours(),
+                settings.isNotifyEmail(),
+                settings.isNotifyPush(),
+                settings.getEnabledLocales()
+        );
     }
 
     @Transactional

@@ -50,7 +50,11 @@
     "hasAccount": "Already have an account?",
     "firstName": "First name",
     "lastName": "Last name",
-    "createOwner": "Owner registration"
+    "createOwner": "Owner registration",
+    "resetTitle": "Reset password",
+    "resetToken": "Reset code",
+    "resetSubmit": "Save new password",
+    "resetDone": "Password updated. You can sign in now."
   },
   "nav": {
     "dashboard": "Home",
@@ -67,6 +71,7 @@
     "admin": "Platform",
     "tenants": "Clinics",
     "plans": "Plans",
+    "subscriptions": "Subscriptions",
     "users": "Users",
     "profile": "Profile",
     "logout": "Sign out",
@@ -98,7 +103,10 @@
     "species": "Species seen",
     "appointmentsMonth": "Appointments by month",
     "recentVaccines": "Upcoming vaccines",
-    "emptyAgenda": "No appointments scheduled for today"
+    "emptyAgenda": "No appointments scheduled for today",
+    "ownerTitle": "Your pets’ care",
+    "ownerSubtitle": "Appointments, vaccines and treatments at a glance",
+    "reminders": "Reminders"
   },
   "admin": {
     "title": "Super admin",
@@ -116,7 +124,9 @@
     "plan": "Plan",
     "status": "Status",
     "activate": "Activate",
-    "suspend": "Suspend"
+    "suspend": "Suspend",
+    "plansSubtitle": "Platform plans and limits",
+    "subscriptions": "Subscriptions"
   },
   "owners": {
     "title": "Owners",
@@ -167,7 +177,10 @@
     "start": "Start",
     "complete": "Complete",
     "reason": "Reason",
-    "empty": "No appointments in this period"
+    "empty": "No appointments in this period",
+    "waiting": "Waiting",
+    "noShow": "No-show",
+    "reschedule": "Reschedule"
   },
   "consultations": {
     "new": "New consultation",
@@ -180,20 +193,35 @@
     "recommendations": "Recommendations",
     "vitals": "Vital signs",
     "anamnesis": "History",
-    "internal": "Internal notes"
+    "internal": "Internal notes",
+    "differential": "Differential diagnosis",
+    "followUp": "Follow-up",
+    "kg": "Weight (kg)",
+    "temp": "Temperature (°C)",
+    "hr": "Heart rate",
+    "rr": "Respiratory rate"
   },
   "messages": {
     "title": "Messages",
     "disclaimer": "This channel is not a substitute for a veterinary emergency. If this is urgent, visit the clinic or call.",
     "send": "Send",
-    "empty": "Select a conversation"
+    "empty": "Select a conversation",
+    "new": "New conversation",
+    "subject": "Subject"
   },
   "reports": {
     "title": "Reports",
     "subtitle": "Clinical activity exports",
     "appointments": "Appointments (Excel)",
     "owners": "Owners (CSV)",
-    "pets": "Pets (CSV)"
+    "pets": "Pets (CSV)",
+    "consultations": "Consultations (CSV)",
+    "vaccines": "Vaccines (CSV)",
+    "from": "From",
+    "to": "To",
+    "veterinarian": "Veterinarian",
+    "branch": "Branch",
+    "export": "Export"
   },
   "settings": {
     "title": "Clinic branding",
@@ -203,7 +231,13 @@
     "logo": "Logo",
     "logoDark": "Dark-mode logo",
     "icon": "Icon",
-    "upload": "Upload image"
+    "upload": "Upload image",
+    "ops": "Operations and notifications",
+    "slot": "Default appointment length (min)",
+    "cancelHours": "Minimum hours to cancel",
+    "dateFormat": "Date format",
+    "notifyEmail": "Email notifications",
+    "notifyPush": "Push notifications"
   },
   "team": { "title": "Veterinary team", "new": "Add veterinarian", "specialty": "Specialty" },
   "branches": { "title": "Branches", "new": "New branch" },

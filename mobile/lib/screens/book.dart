@@ -18,15 +18,25 @@ class _BookScreenState extends State<BookScreen> {
   List services = [];
   List vets = [];
   List slots = [];
-  int? branchId;
-  int? serviceId;
-  int? vetId;
+  Map? branch;
+  Map? service;
+  Map? vet;
   DateTime date = DateTime.now().add(const Duration(days: 1));
-  String? slotStart;
+  Map? slot;
   final reason = TextEditingController();
   bool loading = false;
+  String? error;
 
   I18n get i => I18n.instance;
+  bool get es => i.locale != 'en';
+
+  String _serviceName(Map s) => '${es ? (s['nameEs'] ?? s['nameEn']) : (s['nameEn'] ?? s['nameEs'])}';
+
+  String _slotLabel(dynamic value) {
+    final raw = '$value';
+    final time = raw.contains('T') ? raw.split('T').last : raw;
+    return time.length >= 5 ? time.substring(0, 5) : raw;
+  }
 
   Future<void> loadCatalog() async {
     tenantId = pet?['tenantId'] as int?;
@@ -38,29 +48,31 @@ class _BookScreenState extends State<BookScreen> {
   }
 
   Future<void> loadSlots() async {
-    if (vetId == null) return;
+    if (vet == null) return;
     final day = '${date.year.toString().padLeft(4, '0')}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
     slots = await widget.auth.api.get('/appointments/availability', {
-      'veterinarianId': '$vetId',
-      if (branchId != null) 'branchId': '$branchId',
-      if (serviceId != null) 'serviceId': '$serviceId',
+      'veterinarianId': '${vet!['id']}',
+      if (branch != null) 'branchId': '${branch!['id']}',
+      if (service != null) 'serviceId': '${service!['id']}',
       'date': day,
     }) as List? ?? [];
     setState(() {});
   }
 
   Future<void> submit() async {
-    setState(() => loading = true);
+    setState(() { loading = true; error = null; });
     try {
       await widget.auth.api.post('/appointments', {
         'petId': pet?['id'],
-        'veterinarianId': vetId,
-        'serviceId': serviceId,
-        'branchId': branchId,
-        'startAt': slotStart,
+        'veterinarianId': vet?['id'],
+        'serviceId': service?['id'],
+        'branchId': branch?['id'],
+        'startAt': slot?['startAt'],
         'reason': reason.text,
       });
       if (mounted) Navigator.pop(context);
+    } catch (e) {
+      setState(() => error = i.t('invalid'));
     } finally {
       if (mounted) setState(() => loading = false);
     }
@@ -79,6 +91,9 @@ class _BookScreenState extends State<BookScreen> {
                 ListTile(
                   title: Text('${p['name']}'),
                   subtitle: Text('${p['tenantName'] ?? ''}'),
+                  leading: (p['tenantLogoUrl'] as String?)?.isNotEmpty == true
+                      ? CircleAvatar(backgroundImage: NetworkImage(p['tenantLogoUrl']))
+                      : const CircleAvatar(child: Icon(Icons.pets)),
                   onTap: () async {
                     pet = p as Map;
                     await loadCatalog();
@@ -87,28 +102,56 @@ class _BookScreenState extends State<BookScreen> {
                 ),
             ])),
             if (step == 1) Expanded(child: ListView(children: [
-              Text(i.t('branch')),
+              Text(i.t('branch'), style: Theme.of(context).textTheme.titleMedium),
               for (final b in branches)
-                ListTile(title: Text('${b['name']}'), onTap: () { branchId = b['id'] as int?; setState(() => step = 2); }),
+                ListTile(title: Text('${b['name']}'), subtitle: Text('${b['address'] ?? ''}'), onTap: () { branch = b as Map; setState(() => step = 2); }),
             ])),
             if (step == 2) Expanded(child: ListView(children: [
-              Text(i.t('service')),
+              Text(i.t('service'), style: Theme.of(context).textTheme.titleMedium),
               for (final s in services)
-                ListTile(title: Text('${s['nameEs']}'), onTap: () { serviceId = s['id'] as int?; setState(() => step = 3); }),
+                ListTile(title: Text(_serviceName(s as Map)), subtitle: Text('${s['durationMin'] ?? ''} min'), onTap: () { service = s; setState(() => step = 3); }),
             ])),
             if (step == 3) Expanded(child: ListView(children: [
-              Text(i.t('vet')),
+              Text(i.t('vet'), style: Theme.of(context).textTheme.titleMedium),
               for (final v in vets)
-                ListTile(title: Text('${v['fullName']}'), onTap: () async { vetId = v['id'] as int?; await loadSlots(); setState(() => step = 4); }),
+                ListTile(title: Text('${v['fullName']}'), subtitle: Text('${v['specialty'] ?? ''}'), onTap: () async { vet = v as Map; await loadSlots(); setState(() => step = 4); }),
             ])),
             if (step == 4) Expanded(child: ListView(children: [
-              Text(i.t('slot')),
+              ListTile(
+                title: Text(i.t('pickDate')),
+                subtitle: Text('${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}'),
+                trailing: const Icon(Icons.calendar_today),
+                onTap: () async {
+                  final picked = await showDatePicker(
+                    context: context,
+                    initialDate: date,
+                    firstDate: DateTime.now(),
+                    lastDate: DateTime.now().add(const Duration(days: 90)),
+                  );
+                  if (picked != null) {
+                    date = picked;
+                    await loadSlots();
+                  }
+                },
+              ),
+              Text(i.t('slot'), style: Theme.of(context).textTheme.titleMedium),
               if (slots.isEmpty) Text(i.t('empty')),
               for (final s in slots)
-                ListTile(title: Text('${s['startAt']}'), onTap: () { slotStart = s['startAt'] as String?; setState(() => step = 5); }),
+                ListTile(title: Text(_slotLabel(s['startAt'])), onTap: () { slot = s as Map; setState(() => step = 5); }),
             ])),
             if (step == 5) Expanded(child: ListView(children: [
               TextField(controller: reason, decoration: InputDecoration(labelText: i.t('reason'))),
+              const SizedBox(height: 16),
+              FilledButton(onPressed: () => setState(() => step = 6), child: Text(i.t('continue'))),
+            ])),
+            if (step == 6) Expanded(child: ListView(children: [
+              Text(i.t('review'), style: Theme.of(context).textTheme.titleMedium),
+              ListTile(title: Text('${pet?['name']}'), subtitle: Text('${pet?['tenantName'] ?? ''}')),
+              ListTile(title: Text('${branch?['name']}'), subtitle: Text(i.t('branch'))),
+              ListTile(title: Text(service == null ? '' : _serviceName(service!)), subtitle: Text(i.t('service'))),
+              ListTile(title: Text('${vet?['fullName']}'), subtitle: Text(i.t('vet'))),
+              ListTile(title: Text('${slot?['startAt']}'), subtitle: Text(reason.text)),
+              if (error != null) Text(error!, style: const TextStyle(color: Colors.red)),
               const SizedBox(height: 16),
               FilledButton(onPressed: loading ? null : submit, child: Text(i.t('confirm'))),
             ])),

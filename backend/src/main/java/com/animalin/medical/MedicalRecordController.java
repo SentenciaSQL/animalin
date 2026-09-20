@@ -87,4 +87,15 @@ public class MedicalRecordController {
     public AppDtos.VaccinationResponse createVaccination(@RequestBody AppDtos.VaccinationRequest request) {
         return medicalRecordService.createVaccination(request);
     }
+
+    @GetMapping("/pets/{petId}/labs")
+    public List<AppDtos.LaboratoryResponse> labs(@PathVariable Long petId) {
+        return medicalRecordService.laboratories(petId);
+    }
+
+    @PostMapping("/labs")
+    @ResponseStatus(HttpStatus.CREATED)
+    public AppDtos.LaboratoryResponse createLab(@RequestBody AppDtos.LaboratoryRequest request) {
+        return medicalRecordService.createLaboratory(request);
+    }
 }

@@ -13,7 +13,8 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
     || req.url.includes('/auth/refresh')
     || req.url.includes('/auth/forgot-password')
     || req.url.includes('/auth/reset-password')
-    || req.url.includes('/public/');
+    || req.url.includes('/public/')
+    || req.url.includes('/assets/');
 
   const authorized = token && !isAuthCall
     ? req.clone({ setHeaders: { Authorization: `Bearer ${token}` } })

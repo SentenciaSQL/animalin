@@ -11,13 +11,14 @@ export const appConfig: ApplicationConfig = {
     provideZoneChangeDetection({ eventCoalescing: true }),
     provideRouter(routes),
     provideHttpClient(withInterceptors([authInterceptor])),
-    provideTranslateHttpLoader({
-      prefix: './assets/i18n/',
-      suffix: '.json'
-    }),
     provideTranslateService({
       fallbackLang: 'es',
       lang: 'es'
+    }),
+    provideTranslateHttpLoader({
+      prefix: '/assets/i18n/',
+      suffix: '.json',
+      useHttpBackend: true
     })
   ]
 };

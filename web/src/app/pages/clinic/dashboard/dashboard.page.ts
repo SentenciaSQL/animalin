@@ -18,6 +18,40 @@ import { EmptyStateComponent } from '../../../shared/ui/empty-state.component';
         <h1 class="font-display text-2xl font-semibold">{{ 'admin.title' | translate }}</h1>
         <a routerLink="/admin" class="btn-primary mt-4 inline-flex">{{ 'nav.admin' | translate }}</a>
       </div>
+    } @else if (ownerView()) {
+      <h1 class="font-display text-2xl font-semibold">{{ 'dashboard.ownerTitle' | translate }}</h1>
+      <p class="text-sm text-slate-500">{{ 'dashboard.ownerSubtitle' | translate }}</p>
+      <div class="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <app-stat-card [label]="'nav.pets' | translate" [value]="(data().pets || []).length" />
+        <app-stat-card [label]="'dashboard.treatments' | translate" [value]="(data().activeTreatments || []).length" />
+        <app-stat-card [label]="'dashboard.messages' | translate" [value]="data().unreadMessages || 0" />
+        <app-stat-card [label]="'nav.notifications' | translate" [value]="data().unreadNotifications || 0" />
+      </div>
+      <div class="mt-6 grid gap-4 lg:grid-cols-2">
+        <div class="card">
+          <h2 class="font-medium">{{ 'dashboard.upcoming' | translate }}</h2>
+          @if (!data().nextAppointment?.id) {
+            <empty-state [title]="'dashboard.emptyAgenda' | translate" />
+          } @else {
+            <p class="mt-3 font-medium">{{ data().nextAppointment.pet }}</p>
+            <p class="text-sm text-slate-500">{{ data().nextAppointment.startAt | date:'short' }} · {{ data().nextAppointment.status }}</p>
+          }
+        </div>
+        <div class="card">
+          <h2 class="font-medium">{{ 'dashboard.recentVaccines' | translate }}</h2>
+          @if (!data().nextVaccine?.id) {
+            <p class="mt-3 text-sm text-slate-500">{{ 'common.empty' | translate }}</p>
+          } @else {
+            <p class="mt-3">{{ data().nextVaccine.pet }} · {{ data().nextVaccine.vaccine }}</p>
+            <span [class]="data().nextVaccine.status | statusBadge">{{ data().nextVaccine.status }}</span>
+          }
+        </div>
+      </div>
+      <div class="mt-6 flex flex-wrap gap-3">
+        <a routerLink="/pets" class="btn-primary">{{ 'nav.pets' | translate }}</a>
+        <a routerLink="/calendar" class="btn-secondary">{{ 'nav.calendar' | translate }}</a>
+        <a routerLink="/messages" class="btn-secondary">{{ 'nav.messages' | translate }}</a>
+      </div>
     } @else {
       <div class="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
         <div>
@@ -84,6 +118,10 @@ export class DashboardPage implements OnInit, AfterViewInit {
   data = signal<any>({});
   monthChart = viewChild<ElementRef<HTMLCanvasElement>>('monthChart');
   speciesChart = viewChild<ElementRef<HTMLCanvasElement>>('speciesChart');
+
+  ownerView() {
+    return this.auth.hasRole('PET_OWNER') && !this.auth.isStaff();
+  }
 
   ngOnInit(): void {
     if (!this.auth.isSuperAdmin()) {

@@ -102,7 +102,9 @@ interface NavItem {
         @if (notesOpen()) {
           <div class="border-b border-slate-200 bg-white px-4 py-3 text-sm dark:border-white/10 dark:bg-slate-900">
             @for (n of notes(); track n.id) {
-              <p class="py-1">{{ n.titleEs || n.title }}</p>
+              <button type="button" class="block w-full py-1 text-left" (click)="readNote(n)">
+                {{ n.title || n.titleEs }}
+              </button>
             }
           </div>
         }
@@ -132,6 +134,8 @@ export class ShellComponent implements OnInit {
     { path: '/dashboard', label: 'nav.dashboard' },
     { path: '/admin', label: 'nav.admin', roles: ['SUPER_ADMIN'] },
     { path: '/admin/tenants', label: 'nav.tenants', roles: ['SUPER_ADMIN'] },
+    { path: '/admin/plans', label: 'nav.plans', roles: ['SUPER_ADMIN'] },
+    { path: '/admin/subscriptions', label: 'nav.subscriptions', roles: ['SUPER_ADMIN'] },
     { path: '/owners', label: 'nav.owners', roles: ['TENANT_ADMIN', 'RECEPTIONIST', 'VETERINARIAN'] },
     { path: '/pets', label: 'nav.pets' },
     { path: '/calendar', label: 'nav.calendar' },
@@ -198,5 +202,12 @@ export class ShellComponent implements OnInit {
         this.notes.set(page.content || page || []);
       });
     }
+  }
+
+  readNote(n: any): void {
+    this.api.post(`/notifications/${n.id}/read`, {}).subscribe(() => {
+      this.unread.update(v => Math.max(0, v - 1));
+      this.loadNotes();
+    });
   }
 }

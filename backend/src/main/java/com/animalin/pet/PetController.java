@@ -68,7 +68,13 @@ public class PetController {
     }
 
     @GetMapping("/{id}/weights")
-    public List<PetWeightLog> weights(@PathVariable Long id) {
+    public List<AppDtos.WeightResponse> weights(@PathVariable Long id) {
         return petService.weights(id);
+    }
+
+    @PostMapping("/{id}/weights")
+    @ResponseStatus(HttpStatus.CREATED)
+    public AppDtos.WeightResponse addWeight(@PathVariable Long id, @RequestBody AppDtos.WeightRequest request) {
+        return petService.addWeight(id, request);
     }
 }
