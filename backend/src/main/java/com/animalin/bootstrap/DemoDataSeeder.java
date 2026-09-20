@@ -159,6 +159,7 @@ public class DemoDataSeeder implements CommandLineRunner {
         Veterinarian vet = veterinarian(sanMartin, vetA, branchA, "Medicina interna");
         Owner juan = owner(sanMartin, ownerA, "Juan", "Pérez", "600111222", "juan.owner@animalin.app");
         Owner ana = owner(huellitas, ownerB, "Ana", "Gil", "600555666", "walt.e@example.net");
+        Owner diegoA = owner(sanMartin, ownerBoth, "Diego", "Sanchez", "600333478", "xavier.z@example.org");
         Owner diegoB = owner(huellitas, ownerBoth, "Diego", "Ortega", "600333444", "xavier.y@example.org");
 
         Pet luna = pet(sanMartin, juan, vet, branchA, "Luna", "DOG", "Golden Retriever", "FEMALE",
