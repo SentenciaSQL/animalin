@@ -109,6 +109,33 @@
 	</dependencies>
 	<build>
 		<plugins>
+			<!-- Maven does not delete leftover resource copies. A renamed/removed Flyway
+			     script can remain in target/classes/db/migration and fail startup with
+			     "Found more than one migration with version N". -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-clean-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>clean-stale-flyway-migrations</id>
+						<phase>generate-resources</phase>
+						<goals>
+							<goal>clean</goal>
+						</goals>
+						<configuration>
+							<excludeDefaultDirectories>true</excludeDefaultDirectories>
+							<filesets>
+								<fileset>
+									<directory>${project.build.outputDirectory}/db/migration</directory>
+								</fileset>
+								<fileset>
+									<directory>${project.build.testOutputDirectory}/db/migration</directory>
+								</fileset>
+							</filesets>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
